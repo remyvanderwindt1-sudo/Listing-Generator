@@ -4,6 +4,16 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Language, ProductCategory } from "@/types";
 
+async function safeErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = await res.clone().json();
+    return data?.error ?? fallback;
+  } catch {
+    const text = await res.text().catch(() => "");
+    return text.trim() || fallback;
+  }
+}
+
 const CATEGORIES: ProductCategory[] = [
   "Electronics",
   "Health",
@@ -100,8 +110,7 @@ export default function HomePage() {
       photos.forEach((p) => formData.append("photos", p.file));
       const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
       if (!uploadRes.ok) {
-        const e = await uploadRes.json();
-        throw new Error(e.error || "Upload failed");
+        throw new Error(await safeErrorMessage(uploadRes, "Upload mislukt"));
       }
       const { sessionId, filePaths } = await uploadRes.json();
 
@@ -132,8 +141,7 @@ export default function HomePage() {
         body: JSON.stringify({ sessionId, productName, category, reviews, language }),
       });
       if (!analyzeRes.ok) {
-        const e = await analyzeRes.json();
-        throw new Error(e.error || "Analysis failed");
+        throw new Error(await safeErrorMessage(analyzeRes, "Analyse mislukt"));
       }
 
       // Step 3: Generate copy
@@ -144,8 +152,7 @@ export default function HomePage() {
         body: JSON.stringify({ sessionId }),
       });
       if (!copyRes.ok) {
-        const e = await copyRes.json();
-        throw new Error(e.error || "Copy generation failed");
+        throw new Error(await safeErrorMessage(copyRes, "Tekst genereren mislukt"));
       }
 
       setStep("done");

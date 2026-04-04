@@ -5,6 +5,17 @@ import { useParams, useRouter } from "next/navigation";
 import { CopyResult, InsightsResult, SessionData, SlotCopy } from "@/types";
 import { StyleConfig } from "@/types/style";
 
+// Safely extract an error message from any fetch response (JSON or plain text)
+async function safeErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = await res.clone().json();
+    return data?.error ?? fallback;
+  } catch {
+    const text = await res.text().catch(() => "");
+    return text.trim() || fallback;
+  }
+}
+
 const SLOT_LABELS = [
   "Slot 00 — Hero",
   "Slot 01 — Voordelen",
@@ -44,8 +55,7 @@ async function renderSlot(
     body: JSON.stringify({ sessionId, slotIndex, copy, styleOverride }),
   });
   if (!res.ok) {
-    const e = await res.json();
-    throw new Error(e.error ?? "Render mislukt");
+    throw new Error(await safeErrorMessage(res, "Render mislukt"));
   }
   const blob = await res.blob();
   return URL.createObjectURL(blob);
@@ -149,8 +159,7 @@ export default function ResultsPage() {
         }),
       });
       if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error ?? "Aanpassen mislukt");
+        throw new Error(await safeErrorMessage(res, "Aanpassen mislukt"));
       }
       const { copy: newCopy } = await res.json();
       const url = await renderSlot(sessionId, index, newCopy, slot.styleOverride);
@@ -190,8 +199,7 @@ export default function ResultsPage() {
     try {
       const res = await fetch("/api/analyze-style", { method: "POST", body: formData });
       if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error ?? "Stijl analyse mislukt");
+        throw new Error(await safeErrorMessage(res, "Stijl analyse mislukt"));
       }
       const { styleConfig } = await res.json() as { styleConfig: StyleConfig };
       const chips = styleToChips(styleConfig);
@@ -258,8 +266,7 @@ export default function ResultsPage() {
         }),
       });
       if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error ?? "Stijl aanpassen mislukt");
+        throw new Error(await safeErrorMessage(res, "Stijl aanpassen mislukt"));
       }
       const { styleConfig } = await res.json() as { styleConfig: StyleConfig };
       const chips = styleToChips(styleConfig);
@@ -310,8 +317,7 @@ export default function ResultsPage() {
         body: JSON.stringify({ sessionId, slotIndex: index, temperature: 1 }),
       });
       if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error ?? "Regenereren mislukt");
+        throw new Error(await safeErrorMessage(res, "Regenereren mislukt"));
       }
       const { copy: newCopy } = await res.json();
       const url = await renderSlot(sessionId, index, newCopy, slots[index].styleOverride);
@@ -333,8 +339,7 @@ export default function ResultsPage() {
         body: JSON.stringify({ sessionId }),
       });
       if (!res.ok) {
-        const e = await res.json();
-        throw new Error(e.error ?? "Regenereren mislukt");
+        throw new Error(await safeErrorMessage(res, "Regenereren mislukt"));
       }
       const { copy: newCopy } = await res.json();
       setSlots((prev) =>
