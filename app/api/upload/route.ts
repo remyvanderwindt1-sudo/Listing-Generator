@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
         productName: "",
         category: "Other",
         language: "en",
+        templateMode: "amazon",
         insights: { drivers: [], blockers: [], voiceOfCustomer: [] },
         copy: {} as SessionData["copy"],
         photoPaths: filePaths,

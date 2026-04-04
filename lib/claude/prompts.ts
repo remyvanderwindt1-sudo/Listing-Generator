@@ -1,5 +1,20 @@
+// ── Content guidelines injected into every copy-generation prompt ────────────
+const BOL_GUIDELINES = `
+CONTENT RULES (bol.com — mandatory):
+- NEVER use: sales slogans (op=op, goedkoop, gratis, aanbieding, actie, deal), price references, delivery promises, holiday promotions (Moederdag, Black Friday etc.)
+- NEVER use vague sustainability words: duurzaam, milieuvriendelijk, eco, bewust, verantwoord — only concrete claims like "gemaakt van 70% gerecycled materiaal"
+- NEVER mention stars, review counts, website links, or social media
+- NEVER use promotional words: SALE, NIEUW, TOP RATED, geweldig, fantastisch, uniek, perfect, beste
+- NEVER use CTAs like "Bestel nu" / "Koop nu" / "Niet missen"
+- DO write objective, factual product info: materials, dimensions, weight, colors
+- DO write concrete usage tips derived from review insights
+- DO proactively address common objections from reviews
+- Keep all text concise — headlines max 6 words, bullets/steps max 8 words each`;
+
+// ── Amazon template prompts ──────────────────────────────────────────────────
+
 export const ANALYZE_REVIEWS_SYSTEM = (language: string) =>
-  `You are an Amazon listing conversion expert.
+  `You are a product listing conversion expert.
 Analyze customer reviews and extract conversion insights.
 Write ALL output values in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }`;
@@ -21,11 +36,11 @@ Return this exact JSON structure:
 }`;
 
 export const GENERATE_COPY_SYSTEM = (language: string) =>
-  `You are an expert Amazon listing copywriter.
-Write short, punchy, conversion-focused copy for product listing images.
+  `You are a product listing copywriter for bol.com.
+Write factual, conversion-focused copy for product listing images.
 Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }
-Keep all text concise — headlines max 8 words, bullets max 10 words each.`;
+${BOL_GUIDELINES}`;
 
 export const GENERATE_COPY_USER = (
   productName: string,
@@ -62,5 +77,92 @@ Generate copy for all 5 infographic slots. Return this exact JSON:
     "headline": "string",
     "subline": "string",
     "cta": "string"
+  }
+}`;
+
+// ── Cozella template prompts ─────────────────────────────────────────────────
+
+export const GENERATE_COPY_SYSTEM_COZELLA = (language: string) =>
+  `You are a product listing copywriter for bol.com. You write copy for premium lifestyle product infographics.
+Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
+Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }
+${BOL_GUIDELINES}`;
+
+export const GENERATE_COPY_USER_COZELLA = (
+  productName: string,
+  category: string,
+  drivers: string[],
+  blockers: string[],
+  voiceOfCustomer: string[]
+) => `Product: ${productName} (Category: ${category})
+Conversion drivers: ${drivers.join(", ")}
+Customer blockers: ${blockers.join(", ")}
+Voice of customer: ${voiceOfCustomer.join(", ")}
+
+Generate copy for all 6 Cozella infographic slides. Use the product name as brandName. Choose accentColor and textColor as CSS hex values that suit the product category (e.g. warm neutrals for home/kitchen, clean blues for electronics).
+
+Return this exact JSON (all strings, no nulls):
+{
+  "brandName": "short brand or product name, max 2 words",
+  "accentColor": "#hex",
+  "textColor": "#hex",
+  "slot00": {
+    "headline": "max 6 words, descriptive product title",
+    "subline": "max 8 words, key use case or material",
+    "bullet_0": "max 6 words, concrete feature",
+    "bullet_1": "max 6 words, concrete feature",
+    "bullet_2": "max 6 words, concrete feature",
+    "bullet_3": "max 6 words, concrete feature"
+  },
+  "slot01": {
+    "headline": "max 6 words, benefit headline",
+    "bullet_0": "max 6 words, specific benefit",
+    "bullet_1": "max 6 words, specific benefit",
+    "bullet_2": "max 6 words, specific benefit",
+    "bullet_3": "max 6 words, specific benefit"
+  },
+  "slot02": {
+    "headline": "max 6 words, specs/dimensions headline",
+    "spec_label_0": "1-2 words, e.g. Materiaal",
+    "spec_val_0": "concrete value, e.g. Bamboe",
+    "spec_label_1": "1-2 words",
+    "spec_val_1": "concrete value",
+    "spec_label_2": "1-2 words",
+    "spec_val_2": "concrete value",
+    "spec_label_3": "1-2 words",
+    "spec_val_3": "concrete value",
+    "spec_label_4": "1-2 words",
+    "spec_val_4": "concrete value",
+    "spec_label_5": "1-2 words",
+    "spec_val_5": "concrete value"
+  },
+  "slot03": {
+    "headline": "max 6 words, style/interior fit headline",
+    "subline": "max 8 words, interior context",
+    "style_tag_0": "interior style name, 1-2 words",
+    "style_tag_1": "interior style name, 1-2 words",
+    "style_tag_2": "interior style name, 1-2 words",
+    "style_tag_3": "interior style name, 1-2 words"
+  },
+  "slot04": {
+    "headline": "max 6 words, usage steps headline",
+    "step_0": "action + object, max 6 words",
+    "step_0_sub": "brief clarification, max 8 words",
+    "step_1": "action + object, max 6 words",
+    "step_1_sub": "brief clarification, max 8 words",
+    "step_2": "action + object, max 6 words",
+    "step_2_sub": "brief clarification, max 8 words",
+    "step_3": "action + object, max 6 words",
+    "step_3_sub": "brief clarification, max 8 words"
+  },
+  "slot05": {
+    "headline": "max 6 words, color/variant headline",
+    "variant_0": "color or material name, 1-2 words",
+    "variant_0_color": "#hex CSS color matching the variant name",
+    "variant_1": "color or material name, 1-2 words",
+    "variant_1_color": "#hex CSS color",
+    "variant_2": "color or material name, 1-2 words",
+    "variant_2_color": "#hex CSS color",
+    "variant_note": "factual note about craftsmanship or variation, max 6 words"
   }
 }`;

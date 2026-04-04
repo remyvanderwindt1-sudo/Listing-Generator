@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, setSession } from "@/lib/store";
-import { renderTemplate } from "@/lib/renderer/puppeteer";
+import { renderTemplate, renderTemplateElement } from "@/lib/renderer/puppeteer";
 import {
   slot00Template,
   slot01Template,
@@ -8,7 +8,9 @@ import {
   slot03Template,
   slot04Template,
 } from "@/lib/renderer/templates";
+import { buildCozellaHtml } from "@/lib/renderer/cozellaTemplate";
 import { StyleConfig } from "@/types/style";
+import { CozellaCopyResult } from "@/types";
 import path from "path";
 import { readFile } from "fs/promises";
 
@@ -56,7 +58,45 @@ export async function POST(request: NextRequest) {
     const imageBuffer = await readFile(absolutePath);
     const dataUrl = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
 
-    // Resolve copy
+    if (session.slotPhotoMap[slotIndex] === undefined) {
+      setSession(sessionId, {
+        ...session,
+        slotPhotoMap: { ...session.slotPhotoMap, [slotIndex]: photoWebPath },
+      });
+    }
+
+    const mode = session.templateMode ?? "amazon";
+
+    // ── Cozella rendering path ────────────────────────────────────────────────
+    if (mode === "cozella") {
+      if (!session.cozellaCopy) {
+        return NextResponse.json(
+          { error: "No Cozella copy found for this session." },
+          { status: 400 }
+        );
+      }
+
+      // Merge per-slot override into a complete CozellaCopyResult
+      const slotKey = `slot0${slotIndex}` as keyof CozellaCopyResult;
+      const cozellaCopy: CozellaCopyResult = {
+        ...session.cozellaCopy,
+        ...(overrideCopy ? { [slotKey]: overrideCopy } : {}),
+      };
+
+      const html = await buildCozellaHtml(slotIndex, cozellaCopy, dataUrl);
+      const pngBuffer = await renderTemplateElement(html, slotIndex);
+
+      return new NextResponse(new Uint8Array(pngBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": "image/png",
+          "Content-Disposition": `attachment; filename="infographic-cozella-slot-0${slotIndex}.png"`,
+          "Content-Length": pngBuffer.length.toString(),
+        },
+      });
+    }
+
+    // ── Amazon rendering path ─────────────────────────────────────────────────
     const slotCopy =
       overrideCopy ??
       (session.copy as unknown as Record<string, unknown>)[`slot0${slotIndex}`];
@@ -67,7 +107,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resolve style: request body takes priority, then session global style
     const style: StyleConfig | undefined = overrideStyle ?? session.styleOverride;
 
     let html: string;
@@ -89,13 +128,6 @@ export async function POST(request: NextRequest) {
         break;
       default:
         return NextResponse.json({ error: "Invalid slot index (0–4)." }, { status: 400 });
-    }
-
-    if (session.slotPhotoMap[slotIndex] === undefined) {
-      setSession(sessionId, {
-        ...session,
-        slotPhotoMap: { ...session.slotPhotoMap, [slotIndex]: photoWebPath },
-      });
     }
 
     const pngBuffer = await renderTemplate(html);

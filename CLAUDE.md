@@ -17,6 +17,14 @@ Puppeteer renders HTML templates → downloadable 1500x1500px PNG.
 - Photos stored temporarily in /public/uploads/{sessionId}/
 - All infographics are HTML templates → Puppeteer screenshot → PNG
 
+## Content guidelines — MANDATORY
+Before generating ANY placeholder text (headline, subline, bullets, steps, spec-labels, style tags, variants, etc.) you MUST read and comply with **CONTENT_GUIDELINES.md** in the project root. Key rules:
+- No sales slogans, price references, delivery promises, or holiday promotions
+- No vague sustainability claims — only concrete, verifiable statements
+- No stars, review counts, website links, or social media references
+- All copy must be objective, factual, and product-focused (max 6–8 words per field)
+- These rules apply to BOTH Amazon and Cozella template modes
+
 ## Code style
 - Always use TypeScript, never plain JS
 - Always handle Claude JSON parse errors with one retry

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CopyResult, InsightsResult, SessionData, SlotCopy } from "@/types";
+import { CopyResult, CozellaCopyResult, InsightsResult, SessionData, SlotCopy } from "@/types";
 import { StyleConfig } from "@/types/style";
 
 // Safely extract an error message from any fetch response (JSON or plain text)
@@ -16,7 +16,7 @@ async function safeErrorMessage(res: Response, fallback: string): Promise<string
   }
 }
 
-const SLOT_LABELS = [
+const AMAZON_SLOT_LABELS = [
   "Slot 00 — Hero",
   "Slot 01 — Voordelen",
   "Slot 02 — Probleem / Oplossing",
@@ -24,24 +24,29 @@ const SLOT_LABELS = [
   "Slot 04 — Lifestyle / CTA",
 ];
 
+const COZELLA_SLOT_LABELS = [
+  "Slide 00 — Hero",
+  "Slide 01 — Kenmerken",
+  "Slide 02 — Specificaties",
+  "Slide 03 — Interieurstijl",
+  "Slide 04 — Gebruikssstappen",
+  "Slide 05 — Kleurvarianten",
+];
+
 type ActivePanel = "none" | "tweak" | "style";
 
 interface SlotState {
   copy: SlotCopy;
   styleOverride: StyleConfig | null;
-  previewUrl: string | null;   // blob URL of rendered PNG for preview
+  previewUrl: string | null;
   isBusy: boolean;
   tweakInput: string;
   styleTextInput: string;
   activePanel: ActivePanel;
-  styleChips: string[];         // human-readable chips of extracted style
+  styleChips: string[];
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
-
-function slotKey(i: number): keyof CopyResult {
-  return `slot0${i}` as keyof CopyResult;
-}
 
 async function renderSlot(
   sessionId: string,
@@ -68,6 +73,18 @@ function styleToChips(s: StyleConfig): string[] {
   return chips;
 }
 
+function getSlotCopy(
+  session: SessionData,
+  index: number
+): SlotCopy {
+  if (session.templateMode === "cozella" && session.cozellaCopy) {
+    const key = `slot0${index}` as keyof CozellaCopyResult;
+    return session.cozellaCopy[key] as unknown as SlotCopy;
+  }
+  const key = `slot0${index}` as keyof CopyResult;
+  return (session.copy as unknown as Record<string, SlotCopy>)[key];
+}
+
 // ── component ────────────────────────────────────────────────────────────────
 
 export default function ResultsPage() {
@@ -79,7 +96,7 @@ export default function ResultsPage() {
   const [insights, setInsights] = useState<InsightsResult | null>(null);
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [loadError, setLoadError] = useState("");
-  const [regenerating, setRegenerating] = useState(false); // sidebar full regen
+  const [regenerating, setRegenerating] = useState(false);
   const [globalStyleUploading, setGlobalStyleUploading] = useState(false);
   const [globalStyleProgress, setGlobalStyleProgress] = useState(0);
   const [globalStyleChips, setGlobalStyleChips] = useState<string[]>([]);
@@ -95,9 +112,11 @@ export default function ResultsPage() {
       const s: SessionData = data.session;
       setSession(s);
       setInsights(s.insights);
+
+      const slotCount = s.templateMode === "cozella" ? 6 : 5;
       setSlots(
-        [0, 1, 2, 3, 4].map((i) => ({
-          copy: (s.copy as unknown as Record<string, SlotCopy>)[`slot0${i}`],
+        Array.from({ length: slotCount }, (_, i) => ({
+          copy: getSlotCopy(s, i),
           styleOverride: null,
           previewUrl: null,
           isBusy: false,
@@ -176,7 +195,7 @@ export default function ResultsPage() {
     }
   };
 
-  // ── Button 2 — Stijl uploaden (per slide) ────────────────────────────────
+  // ── Button 2 — Stijl uploaden (per slide, Amazon only) ───────────────────
 
   const handleStyleUpload = async (
     index: number,
@@ -189,7 +208,6 @@ export default function ResultsPage() {
     formData.append("sessionId", sessionId);
     formData.append("image", file);
 
-    // Mark busy
     if (applyToAll) {
       setSlots((prev) => prev.map((s) => ({ ...s, isBusy: true })));
     } else {
@@ -206,15 +224,14 @@ export default function ResultsPage() {
 
       if (applyToAll) {
         setGlobalStyleChips(chips);
-        // Re-render all slots with new style
         setGlobalStyleProgress(0);
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < slots.length; i++) {
           const slotCopy = slots[i].copy;
           const url = await renderSlot(sessionId, i, slotCopy, styleConfig);
           setSlots((prev) =>
             prev.map((s, idx) =>
               idx === i
-                ? { ...s, styleOverride: styleConfig, previewUrl: url, isBusy: idx < 4, styleChips: chips }
+                ? { ...s, styleOverride: styleConfig, previewUrl: url, isBusy: idx < slots.length - 1, styleChips: chips }
                 : s
             )
           );
@@ -242,7 +259,7 @@ export default function ResultsPage() {
     }
   };
 
-  // ── Style via text description ───────────────────────────────────────────
+  // ── Style via text description (Amazon only) ─────────────────────────────
 
   const handleStyleText = async (index: number, applyToAll: boolean) => {
     const slot = slots[index];
@@ -274,12 +291,12 @@ export default function ResultsPage() {
       if (applyToAll) {
         setGlobalStyleChips(chips);
         setGlobalStyleProgress(0);
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < slots.length; i++) {
           const url = await renderSlot(sessionId, i, slots[i].copy, styleConfig);
           setSlots((prev) =>
             prev.map((s, idx) =>
               idx === i
-                ? { ...s, styleOverride: styleConfig, previewUrl: url, isBusy: idx < 4, styleChips: chips, styleTextInput: "" }
+                ? { ...s, styleOverride: styleConfig, previewUrl: url, isBusy: idx < slots.length - 1, styleChips: chips, styleTextInput: "" }
                 : s
             )
           );
@@ -342,13 +359,26 @@ export default function ResultsPage() {
         throw new Error(await safeErrorMessage(res, "Regenereren mislukt"));
       }
       const { copy: newCopy } = await res.json();
-      setSlots((prev) =>
-        prev.map((s, i) => ({
-          ...s,
-          copy: (newCopy as unknown as Record<string, SlotCopy>)[`slot0${i}`],
-          previewUrl: null,
-        }))
-      );
+
+      if (session?.templateMode === "cozella") {
+        // newCopy is a CozellaCopyResult
+        const cozellaCopy = newCopy as CozellaCopyResult;
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (cozellaCopy[`slot0${i}` as keyof CozellaCopyResult] as unknown as SlotCopy),
+            previewUrl: null,
+          }))
+        );
+      } else {
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (newCopy as unknown as Record<string, SlotCopy>)[`slot0${i}`],
+            previewUrl: null,
+          }))
+        );
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Regenereren mislukt");
     } finally {
@@ -365,7 +395,8 @@ export default function ResultsPage() {
       const url = await renderSlot(sessionId, index, slot.copy, slot.styleOverride);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `infographic-slot-0${index}.png`;
+      const mode = session?.templateMode ?? "amazon";
+      a.download = `infographic-${mode}-slot-0${index}.png`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -404,6 +435,9 @@ export default function ResultsPage() {
     );
   }
 
+  const isCozella = session.templateMode === "cozella";
+  const slotLabels = isCozella ? COZELLA_SLOT_LABELS : AMAZON_SLOT_LABELS;
+
   return (
     <main style={{ background: "#0f0f0f", minHeight: "100vh", color: "white" }}
       className="flex">
@@ -417,7 +451,12 @@ export default function ResultsPage() {
         </button>
 
         <h2 className="text-lg font-bold mb-0.5">{session.productName}</h2>
-        <p className="text-gray-500 text-sm mb-6">{session.category}</p>
+        <div className="flex items-center gap-2 mb-6">
+          <p className="text-gray-500 text-sm">{session.category}</p>
+          <span className="text-xs text-gray-600 border border-[#333] rounded px-1.5 py-0.5">
+            {isCozella ? "Cozella" : "Amazon"}
+          </span>
+        </div>
 
         <div className="mb-5">
           <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
@@ -472,49 +511,52 @@ export default function ResultsPage() {
       {/* ── Main ────────────────────────────────────────────────────────── */}
       <div className="flex-1 p-8 overflow-y-auto">
 
-        {/* Global style header */}
+        {/* Global style header — Amazon only */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold">Jouw infographics</h1>
             <p className="text-gray-500 text-sm mt-1">
-              Pas tekst aan, upload een stijlreferentie of regenereer per slide
+              {isCozella
+                ? "Pas tekst aan of regenereer per slide"
+                : "Pas tekst aan, upload een stijlreferentie of regenereer per slide"}
             </p>
           </div>
 
-          {/* Global style upload */}
-          <div>
-            <input ref={globalStyleInputRef} type="file" accept="image/jpeg,image/png"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setGlobalStyleUploading(true);
-                setGlobalStyleProgress(0);
-                await handleStyleUpload(0, file, true);
-                e.target.value = "";
-              }} />
+          {!isCozella && (
+            <div>
+              <input ref={globalStyleInputRef} type="file" accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setGlobalStyleUploading(true);
+                  setGlobalStyleProgress(0);
+                  await handleStyleUpload(0, file, true);
+                  e.target.value = "";
+                }} />
 
-            <button
-              onClick={() => globalStyleInputRef.current?.click()}
-              disabled={globalStyleUploading}
-              className="flex items-center gap-2 px-4 py-2.5 border border-[#444] rounded-xl text-sm text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors disabled:opacity-50">
-              🎨
-              {globalStyleUploading
-                ? `Stijl toepassen... (${globalStyleProgress}/5)`
-                : "Stijlreferentie voor alle slides"}
-            </button>
+              <button
+                onClick={() => globalStyleInputRef.current?.click()}
+                disabled={globalStyleUploading}
+                className="flex items-center gap-2 px-4 py-2.5 border border-[#444] rounded-xl text-sm text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors disabled:opacity-50">
+                🎨
+                {globalStyleUploading
+                  ? `Stijl toepassen... (${globalStyleProgress}/${slots.length})`
+                  : "Stijlreferentie voor alle slides"}
+              </button>
 
-            {globalStyleChips.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {globalStyleChips.map((c) => (
-                  <span key={c}
-                    className="bg-[#1a2a1a] border border-green-900 text-green-400 rounded-full px-2.5 py-0.5 text-xs">
-                    {c}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+              {globalStyleChips.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {globalStyleChips.map((c) => (
+                    <span key={c}
+                      className="bg-[#1a2a1a] border border-green-900 text-green-400 rounded-full px-2.5 py-0.5 text-xs">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Slot cards */}
@@ -525,6 +567,8 @@ export default function ResultsPage() {
               index={index}
               slot={slot}
               session={session}
+              label={slotLabels[index]}
+              isCozella={isCozella}
               onTweak={() => handleTweak(index)}
               onTweakInputChange={(v) => patchSlot(index, { tweakInput: v })}
               onStyleFile={(file, all) => handleStyleUpload(index, file, all)}
@@ -551,6 +595,8 @@ interface SlotCardProps {
   index: number;
   slot: SlotState;
   session: SessionData;
+  label: string;
+  isCozella: boolean;
   onTweak: () => void;
   onTweakInputChange: (v: string) => void;
   onStyleFile: (file: File, applyToAll: boolean) => void;
@@ -565,6 +611,8 @@ function SlotCard({
   index,
   slot,
   session,
+  label,
+  isCozella,
   onTweak,
   onTweakInputChange,
   onStyleFile,
@@ -587,7 +635,7 @@ function SlotCard({
 
       {/* Header */}
       <div className="px-5 py-3 border-b border-[#222] flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-300">{SLOT_LABELS[index]}</span>
+        <span className="text-sm font-semibold text-gray-300">{label}</span>
         {slot.styleChips.length > 0 && (
           <div className="flex gap-1 flex-wrap justify-end">
             {slot.styleChips.slice(0, 3).map((c) => (
@@ -626,12 +674,14 @@ function SlotCard({
           disabled={slot.isBusy}>
           ✏️ Tekst aanpassen
         </ActionBtn>
-        <ActionBtn
-          active={slot.activePanel === "style"}
-          onClick={() => onTogglePanel("style")}
-          disabled={slot.isBusy}>
-          🎨 Stijl uploaden
-        </ActionBtn>
+        {!isCozella && (
+          <ActionBtn
+            active={slot.activePanel === "style"}
+            onClick={() => onTogglePanel("style")}
+            disabled={slot.isBusy}>
+            🎨 Stijl uploaden
+          </ActionBtn>
+        )}
         <ActionBtn onClick={onRegenerate} disabled={slot.isBusy}>
           🔄 Regenereer
         </ActionBtn>
@@ -646,7 +696,7 @@ function SlotCard({
           <textarea
             value={slot.tweakInput}
             onChange={(e) => onTweakInputChange(e.target.value)}
-            placeholder="Wat wil je aanpassen? bijv. 'Maak de headline korter' of 'Verander CTA naar Bestel Nu'"
+            placeholder="Wat wil je aanpassen? bijv. 'Maak de headline korter' of 'Verander de bullet over materiaal'"
             rows={3}
             disabled={slot.isBusy}
             className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#555] resize-none disabled:opacity-50"
@@ -660,8 +710,8 @@ function SlotCard({
         </div>
       )}
 
-      {/* Style panel */}
-      {slot.activePanel === "style" && (
+      {/* Style panel — Amazon only */}
+      {slot.activePanel === "style" && !isCozella && (
         <div className="px-4 py-4 border-b border-[#1e1e1e] bg-[#0f0f0f]">
           <input
             ref={styleFileInputRef}
@@ -681,7 +731,7 @@ function SlotCard({
             <textarea
               value={slot.styleTextInput}
               onChange={(e) => onStyleTextInputChange(e.target.value)}
-              placeholder="bijv. 'Maak het donkerder en luxueuzer' of 'Gebruik een minimale stijl met grote koptekst' of 'Zorg voor meer contrast'"
+              placeholder="bijv. 'Maak het donkerder en luxueuzer' of 'Gebruik een minimale stijl met grote koptekst'"
               rows={2}
               disabled={slot.isBusy}
               className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-2.5 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#555] resize-none disabled:opacity-50"

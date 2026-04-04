@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateCopy } from "@/lib/claude/generateCopy";
+import { generateCopy, generateCozellaCopy } from "@/lib/claude/generateCopy";
 import { getSession, setSession } from "@/lib/store";
-import { CopyResult } from "@/types";
+import { CopyResult, CozellaCopyResult } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { sessionId, slotIndex, temperature = 0.7 } = body as {
       sessionId: string;
-      slotIndex?: number;       // if provided, regenerate only this slot
+      slotIndex?: number;
       temperature?: number;
     };
 
@@ -34,23 +34,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const lang = session.language ?? "nl";
+    const mode = session.templateMode ?? "amazon";
+
+    // ── Cozella mode ──────────────────────────────────────────────────────────
+    if (mode === "cozella") {
+      const allCopy = await generateCozellaCopy(
+        session.productName,
+        session.category,
+        session.insights,
+        lang,
+        temperature
+      );
+
+      if (slotIndex !== undefined) {
+        const slotKey = `slot0${slotIndex}` as keyof CozellaCopyResult;
+        const updatedCozella: CozellaCopyResult = {
+          ...(session.cozellaCopy ?? allCopy),
+          [slotKey]: allCopy[slotKey],
+        };
+        setSession(sessionId, { ...session, cozellaCopy: updatedCozella });
+        return NextResponse.json({ copy: allCopy[slotKey], slotIndex });
+      }
+
+      setSession(sessionId, { ...session, cozellaCopy: allCopy });
+      return NextResponse.json({ copy: allCopy });
+    }
+
+    // ── Amazon mode ───────────────────────────────────────────────────────────
     const allCopy = await generateCopy(
       session.productName,
       session.category,
       session.insights,
-      session.language ?? "nl",
+      lang,
       temperature
     );
 
     if (slotIndex !== undefined) {
-      // Per-slot regenerate: update only the requested slot, return only that slot
       const slotKey = `slot0${slotIndex}` as keyof CopyResult;
       const updatedCopy: CopyResult = { ...session.copy, [slotKey]: allCopy[slotKey] };
       setSession(sessionId, { ...session, copy: updatedCopy });
       return NextResponse.json({ copy: allCopy[slotKey], slotIndex });
     }
 
-    // Full regenerate (all slots)
     setSession(sessionId, { ...session, copy: allCopy });
     return NextResponse.json({ copy: allCopy });
   } catch (error) {

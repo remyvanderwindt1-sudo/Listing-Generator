@@ -1,39 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { CopyResult, InsightsResult, Language, ProductCategory } from "@/types";
-import { GENERATE_COPY_SYSTEM, GENERATE_COPY_USER } from "./prompts";
+import {
+  CopyResult,
+  CozellaCopyResult,
+  InsightsResult,
+  Language,
+  ProductCategory,
+  TemplateMode,
+} from "@/types";
+import {
+  GENERATE_COPY_SYSTEM,
+  GENERATE_COPY_USER,
+  GENERATE_COPY_SYSTEM_COZELLA,
+  GENERATE_COPY_USER_COZELLA,
+} from "./prompts";
 
 const client = new Anthropic();
-
-async function callClaude(
-  productName: string,
-  category: ProductCategory,
-  insights: InsightsResult,
-  language: Language,
-  temperature = 0.7
-): Promise<string> {
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: 2048,
-    temperature,
-    system: GENERATE_COPY_SYSTEM(language),
-    messages: [
-      {
-        role: "user",
-        content: GENERATE_COPY_USER(
-          productName,
-          category,
-          insights.drivers,
-          insights.blockers,
-          insights.voiceOfCustomer
-        ),
-      },
-    ],
-  });
-
-  const block = message.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response type");
-  return block.text;
-}
 
 function parseClaudeJSON(text: string) {
   const cleaned = text
@@ -43,26 +24,94 @@ function parseClaudeJSON(text: string) {
   return JSON.parse(cleaned);
 }
 
+async function callClaude(
+  system: string,
+  userMessage: string,
+  temperature: number
+): Promise<string> {
+  const message = await client.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 2048,
+    temperature,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+  return block.text;
+}
+
 export async function generateCopy(
   productName: string,
   category: ProductCategory,
   insights: InsightsResult,
-  language: Language = "en",
+  language: Language = "nl",
   temperature = 0.7
 ): Promise<CopyResult> {
-  let raw: string;
+  const system = GENERATE_COPY_SYSTEM(language);
+  const userMsg = GENERATE_COPY_USER(
+    productName,
+    category,
+    insights.drivers,
+    insights.blockers,
+    insights.voiceOfCustomer
+  );
 
+  let raw: string;
   try {
-    raw = await callClaude(productName, category, insights, language, temperature);
+    raw = await callClaude(system, userMsg, temperature);
     return parseClaudeJSON(raw) as CopyResult;
   } catch {
-    raw = await callClaude(productName, category, insights, language, temperature);
+    raw = await callClaude(system, userMsg, temperature);
     try {
       return parseClaudeJSON(raw) as CopyResult;
     } catch {
-      throw new Error(
-        `Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`
-      );
+      throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
     }
   }
+}
+
+export async function generateCozellaCopy(
+  productName: string,
+  category: ProductCategory,
+  insights: InsightsResult,
+  language: Language = "nl",
+  temperature = 0.7
+): Promise<CozellaCopyResult> {
+  const system = GENERATE_COPY_SYSTEM_COZELLA(language);
+  const userMsg = GENERATE_COPY_USER_COZELLA(
+    productName,
+    category,
+    insights.drivers,
+    insights.blockers,
+    insights.voiceOfCustomer
+  );
+
+  let raw: string;
+  try {
+    raw = await callClaude(system, userMsg, temperature);
+    return parseClaudeJSON(raw) as CozellaCopyResult;
+  } catch {
+    raw = await callClaude(system, userMsg, temperature);
+    try {
+      return parseClaudeJSON(raw) as CozellaCopyResult;
+    } catch {
+      throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
+    }
+  }
+}
+
+// Convenience: dispatch based on templateMode
+export async function generateCopyForMode(
+  productName: string,
+  category: ProductCategory,
+  insights: InsightsResult,
+  language: Language,
+  templateMode: TemplateMode,
+  temperature = 0.7
+): Promise<CopyResult | CozellaCopyResult> {
+  if (templateMode === "cozella") {
+    return generateCozellaCopy(productName, category, insights, language, temperature);
+  }
+  return generateCopy(productName, category, insights, language, temperature);
 }

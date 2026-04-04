@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeReviews } from "@/lib/claude/analyzeReviews";
 import { getSession, setSession } from "@/lib/store";
-import { Language, ProductCategory, SessionData } from "@/types";
+import { Language, ProductCategory, SessionData, TemplateMode } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, productName, category, reviews, language = "en" } = body as {
+    const {
+      sessionId,
+      productName,
+      category,
+      reviews,
+      language = "nl",
+      templateMode = "amazon",
+    } = body as {
       sessionId: string;
       productName: string;
       category: ProductCategory;
       reviews: string;
       language: Language;
+      templateMode: TemplateMode;
     };
 
     if (!sessionId || !productName || !category || !reviews) {
@@ -23,14 +31,15 @@ export async function POST(request: NextRequest) {
 
     const insights = await analyzeReviews(productName, category, reviews, language);
 
-    // Create or update session with insights
     const existing = getSession(sessionId);
     const sessionData: SessionData = {
       productName,
       category,
       language,
+      templateMode,
       insights,
       copy: existing?.copy ?? ({} as SessionData["copy"]),
+      cozellaCopy: existing?.cozellaCopy,
       photoPaths: existing?.photoPaths ?? [],
       slotPhotoMap: existing?.slotPhotoMap ?? {},
       createdAt: existing?.createdAt ?? Date.now(),

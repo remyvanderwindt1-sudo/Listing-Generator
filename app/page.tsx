@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Language, ProductCategory } from "@/types";
+import { Language, ProductCategory, TemplateMode } from "@/types";
 
 async function safeErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
@@ -44,6 +44,7 @@ export default function HomePage() {
   const [productName, setProductName] = useState("");
   const [category, setCategory] = useState<ProductCategory>("Electronics");
   const [language, setLanguage] = useState<Language>("nl");
+  const [templateMode, setTemplateMode] = useState<TemplateMode>("amazon");
   const [reviews, setReviews] = useState("");
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [step, setStep] = useState<Step>("idle");
@@ -119,14 +120,12 @@ export default function HomePage() {
       photos.forEach((p, i) => {
         if (filePaths[i]) slotPhotoMap[p.slot] = filePaths[i];
       });
-      // Fill any unmapped slots by cycling available photos
       for (let s = 0; s < 5; s++) {
         if (slotPhotoMap[s] === undefined && filePaths.length > 0) {
           slotPhotoMap[s] = filePaths[s % filePaths.length];
         }
       }
 
-      // Persist slot map + photoPaths to session
       await fetch(`/api/session/${sessionId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -138,7 +137,7 @@ export default function HomePage() {
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, productName, category, reviews, language }),
+        body: JSON.stringify({ sessionId, productName, category, reviews, language, templateMode }),
       });
       if (!analyzeRes.ok) {
         throw new Error(await safeErrorMessage(analyzeRes, "Analyse mislukt"));
@@ -186,6 +185,39 @@ export default function HomePage() {
         <p className="text-gray-400 mb-10 text-lg">
           Upload photos + paste reviews → get 5 ready-to-use listing images
         </p>
+
+        {/* Template mode selector */}
+        <div className="mb-8">
+          <span className="block text-sm font-semibold text-gray-300 mb-3 uppercase tracking-widest">
+            Template
+          </span>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setTemplateMode("amazon")}
+              disabled={isLoading}
+              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "amazon"
+                  ? "border-white bg-white/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">Amazon / Bol.com</div>
+              <div className="text-xs text-gray-500">5 slides · Aanpasbare stijl</div>
+            </button>
+            <button
+              onClick={() => setTemplateMode("cozella")}
+              disabled={isLoading}
+              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "cozella"
+                  ? "border-white bg-white/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">Cozella</div>
+              <div className="text-xs text-gray-500">6 slides · Premium lifestyle stijl</div>
+            </button>
+          </div>
+        </div>
 
         {/* Language toggle */}
         <div className="mb-8 flex items-center gap-3">

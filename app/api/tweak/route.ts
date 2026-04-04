@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { tweakCopy } from "@/lib/claude/tweakCopy";
 import { getSession, setSession } from "@/lib/store";
-import { CopyResult, Language, SlotCopy } from "@/types";
+import { CopyResult, CozellaCopyResult, SlotCopy } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,8 +24,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
 
-    const slotKey = `slot0${slotIndex}` as keyof CopyResult;
-    const currentCopy = session.copy[slotKey] as SlotCopy;
+    const mode = session.templateMode ?? "amazon";
+    const slotKey = `slot0${slotIndex}` as keyof CopyResult & keyof CozellaCopyResult;
+
+    if (mode === "cozella") {
+      // Cozella: read from cozellaCopy
+      const currentCopy = session.cozellaCopy?.[slotKey] as SlotCopy | undefined;
+      if (!currentCopy) {
+        return NextResponse.json(
+          { error: `No Cozella copy found for slot ${slotIndex}.` },
+          { status: 400 }
+        );
+      }
+
+      const updatedSlotCopy = await tweakCopy(
+        slotKey as keyof CopyResult,
+        currentCopy,
+        userRequest,
+        session.language ?? "nl"
+      );
+
+      const updatedCozella: CozellaCopyResult = {
+        ...(session.cozellaCopy!),
+        [slotKey]: updatedSlotCopy,
+      };
+      setSession(sessionId, { ...session, cozellaCopy: updatedCozella });
+      return NextResponse.json({ copy: updatedSlotCopy });
+    }
+
+    // Amazon mode
+    const currentCopy = session.copy[slotKey as keyof CopyResult] as SlotCopy;
     if (!currentCopy) {
       return NextResponse.json(
         { error: `No copy found for slot ${slotIndex}.` },
@@ -34,19 +62,17 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedSlotCopy = await tweakCopy(
-      slotKey,
+      slotKey as keyof CopyResult,
       currentCopy,
       userRequest,
       session.language ?? "nl"
     );
 
-    // Persist updated copy back to session
     const updatedCopy: CopyResult = {
       ...session.copy,
       [slotKey]: updatedSlotCopy,
     };
     setSession(sessionId, { ...session, copy: updatedCopy });
-
     return NextResponse.json({ copy: updatedSlotCopy });
   } catch (error) {
     console.error("Tweak error:", error);
