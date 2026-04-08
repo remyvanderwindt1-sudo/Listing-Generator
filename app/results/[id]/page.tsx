@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CopyResult, CozellaCopyResult, InsightsResult, SessionData, SlotCopy } from "@/types";
+import { CopyResult, CozellaCopyResult, InsightsResult, Language, SessionData, SlotCopy } from "@/types";
 import { StyleConfig } from "@/types/style";
 
 // Safely extract an error message from any fetch response (JSON or plain text)
@@ -106,6 +106,8 @@ export default function ResultsPage() {
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [loadError, setLoadError] = useState("");
   const [regenerating, setRegenerating] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>("nl");
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [globalStyleUploading, setGlobalStyleUploading] = useState(false);
   const [globalStyleProgress, setGlobalStyleProgress] = useState(0);
   const [globalStyleChips, setGlobalStyleChips] = useState<string[]>([]);
@@ -121,6 +123,7 @@ export default function ResultsPage() {
       const s: SessionData = data.session;
       setSession(s);
       setInsights(s.insights);
+      setCurrentLanguage(s.language ?? "nl");
 
       const slotCount = (s.templateMode === "cozella" || s.templateMode === "rambux") ? 6 : 5;
       setSlots(
@@ -369,7 +372,7 @@ export default function ResultsPage() {
       }
       const { copy: newCopy } = await res.json();
 
-      if (session?.templateMode === "cozella") {
+      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
         // newCopy is a CozellaCopyResult
         const cozellaCopy = newCopy as CozellaCopyResult;
         setSlots((prev) =>
@@ -392,6 +395,83 @@ export default function ResultsPage() {
       alert(err instanceof Error ? err.message : "Regenereren mislukt");
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  // ── Language switch ───────────────────────────────────────────────────────
+
+  const handleLanguageSwitch = async (lang: Language) => {
+    if (lang === currentLanguage || regenerating) return;
+    setRegenerating(true);
+    try {
+      await fetch(`/api/session/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: lang }),
+      });
+
+      const res = await fetch("/api/generate-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!res.ok) {
+        throw new Error(await safeErrorMessage(res, "Taal wisselen mislukt"));
+      }
+      const { copy: newCopy } = await res.json();
+
+      setCurrentLanguage(lang);
+      setSession((prev) => prev ? { ...prev, language: lang } : prev);
+
+      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
+        const cozellaCopy = newCopy as CozellaCopyResult;
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (cozellaCopy[`slot0${i}` as keyof CozellaCopyResult] as unknown as SlotCopy),
+            previewUrl: null,
+          }))
+        );
+      } else {
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (newCopy as unknown as Record<string, SlotCopy>)[`slot0${i}`],
+            previewUrl: null,
+          }))
+        );
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Taal wisselen mislukt");
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
+  // ── Download all ──────────────────────────────────────────────────────────
+
+  const handleDownloadAll = async () => {
+    if (downloadingAll) return;
+    setDownloadingAll(true);
+    setSlots((prev) => prev.map((s) => ({ ...s, isBusy: true })));
+    const mode = session?.templateMode ?? "amazon";
+    try {
+      for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        const url = await renderSlot(sessionId, i, slot.copy, slot.styleOverride);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `infographic-${mode}-slot-0${i}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+        // small delay so browser doesn't block sequential downloads
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Download mislukt");
+    } finally {
+      setSlots((prev) => prev.map((s) => ({ ...s, isBusy: false })));
+      setDownloadingAll(false);
     }
   };
 
@@ -510,11 +590,43 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        <button onClick={handleFullRegenerate} disabled={regenerating}
+        <button onClick={handleFullRegenerate} disabled={regenerating || downloadingAll}
           className="w-full py-2.5 border border-[#333] rounded-lg text-sm text-gray-300 hover:bg-[#1a1a1a] hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
           {regenerating ? (
             <><div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />Bezig...</>
           ) : "↺ Alle teksten regenereren"}
+        </button>
+
+        {/* Language switcher */}
+        <div className="mt-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Taal</p>
+          <div className="flex rounded-lg overflow-hidden border border-[#333]">
+            {(["nl", "en", "de"] as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => handleLanguageSwitch(lang)}
+                disabled={regenerating || downloadingAll}
+                className={`flex-1 py-2 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                  currentLanguage === lang
+                    ? "bg-white text-black"
+                    : "bg-[#1a1a1a] text-gray-400 hover:text-white"
+                }`}
+              >
+                {lang === "nl" ? "NL" : lang === "de" ? "DE" : "EN"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Download all */}
+        <button
+          onClick={handleDownloadAll}
+          disabled={downloadingAll || regenerating || slots.some((s) => s.isBusy)}
+          className="w-full mt-3 py-2.5 bg-white text-black font-semibold rounded-lg text-sm hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {downloadingAll ? (
+            <><div className="w-3.5 h-3.5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />Downloaden...</>
+          ) : "↓ Alle slides downloaden"}
         </button>
       </aside>
 

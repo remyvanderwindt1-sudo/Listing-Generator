@@ -16,7 +16,7 @@ CONTENT RULES (bol.com — mandatory):
 export const ANALYZE_REVIEWS_SYSTEM = (language: string) =>
   `You are a product listing conversion expert.
 Analyze customer reviews and extract conversion insights.
-Write ALL output values in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
+Write ALL output values in ${language === "nl" ? "Dutch (Nederlands)" : language === "de" ? "German (Deutsch)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }`;
 
 export const ANALYZE_REVIEWS_USER = (
@@ -38,7 +38,7 @@ Return this exact JSON structure:
 export const GENERATE_COPY_SYSTEM = (language: string) =>
   `You are a product listing copywriter for bol.com.
 Write factual, conversion-focused copy for product listing images.
-Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
+Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : language === "de" ? "German (Deutsch)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }
 ${BOL_GUIDELINES}`;
 
@@ -84,7 +84,7 @@ Generate copy for all 5 infographic slots. Return this exact JSON:
 
 export const GENERATE_COPY_SYSTEM_RAMBUX = (language: string) =>
   `You are a product listing copywriter for bol.com. You write copy for RAMBUX®, a bold outdoor and adventure gear brand. Tone: direct, energetic, confident — no fluff.
-Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
+Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : language === "de" ? "German (Deutsch)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }
 ${BOL_GUIDELINES}`;
 
@@ -174,7 +174,7 @@ Return this exact JSON (all strings, no nulls):
 
 export const GENERATE_COPY_SYSTEM_COZELLA = (language: string) =>
   `You are a product listing copywriter for bol.com. You write copy for premium lifestyle product infographics.
-Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : "English"}.
+Write ALL copy in ${language === "nl" ? "Dutch (Nederlands)" : language === "de" ? "German (Deutsch)" : "English"}.
 Respond with valid JSON ONLY. No markdown. No code blocks. No backticks. Start directly with { and end with }
 ${BOL_GUIDELINES}`;
 

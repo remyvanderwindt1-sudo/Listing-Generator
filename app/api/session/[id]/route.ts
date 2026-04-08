@@ -33,6 +33,9 @@ export async function PATCH(
   if (body.photoPaths !== undefined) {
     setSession(params.id, { ...session, photoPaths: body.photoPaths });
   }
+  if (body.language !== undefined) {
+    setSession(params.id, { ...session, language: body.language });
+  }
 
   return NextResponse.json({ ok: true });
 }

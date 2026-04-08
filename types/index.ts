@@ -127,7 +127,7 @@ export type CozellaSlotCopy =
 
 export type TemplateMode = "amazon" | "cozella" | "rambux";
 
-export type Language = "nl" | "en";
+export type Language = "nl" | "en" | "de";
 
 export type { StyleConfig } from "./style";
 
