@@ -191,7 +191,7 @@ export default function HomePage() {
           <span className="block text-sm font-semibold text-gray-300 mb-3 uppercase tracking-widest">
             Template
           </span>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => setTemplateMode("amazon")}
               disabled={isLoading}
@@ -215,6 +215,18 @@ export default function HomePage() {
             >
               <div className="text-base font-semibold mb-0.5">Cozella</div>
               <div className="text-xs text-gray-500">6 slides · Premium lifestyle stijl</div>
+            </button>
+            <button
+              onClick={() => setTemplateMode("rambux")}
+              disabled={isLoading}
+              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "rambux"
+                  ? "border-[#F5B800] bg-[#F5B800]/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">RAMBUX®</div>
+              <div className="text-xs text-gray-500">6 slides · Adventure huisstijl</div>
             </button>
           </div>
         </div>

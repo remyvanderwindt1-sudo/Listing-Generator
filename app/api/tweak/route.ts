@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const mode = session.templateMode ?? "amazon";
     const slotKey = `slot0${slotIndex}` as keyof CopyResult & keyof CozellaCopyResult;
 
-    if (mode === "cozella") {
+    if (mode === "cozella" || mode === "rambux") {
       // Cozella: read from cozellaCopy
       const currentCopy = session.cozellaCopy?.[slotKey] as SlotCopy | undefined;
       if (!currentCopy) {

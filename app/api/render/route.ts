@@ -9,6 +9,7 @@ import {
   slot04Template,
 } from "@/lib/renderer/templates";
 import { buildCozellaHtml } from "@/lib/renderer/cozellaTemplate";
+import { buildRambuxHtml } from "@/lib/renderer/rambuxTemplate";
 import { StyleConfig } from "@/types/style";
 import { CozellaCopyResult } from "@/types";
 import path from "path";
@@ -67,30 +68,31 @@ export async function POST(request: NextRequest) {
 
     const mode = session.templateMode ?? "amazon";
 
-    // ── Cozella rendering path ────────────────────────────────────────────────
-    if (mode === "cozella") {
+    // ── Cozella / RAMBUX rendering path ──────────────────────────────────────
+    if (mode === "cozella" || mode === "rambux") {
       if (!session.cozellaCopy) {
         return NextResponse.json(
-          { error: "No Cozella copy found for this session." },
+          { error: `No ${mode} copy found for this session.` },
           { status: 400 }
         );
       }
 
-      // Merge per-slot override into a complete CozellaCopyResult
       const slotKey = `slot0${slotIndex}` as keyof CozellaCopyResult;
-      const cozellaCopy: CozellaCopyResult = {
+      const templateCopy: CozellaCopyResult = {
         ...session.cozellaCopy,
         ...(overrideCopy ? { [slotKey]: overrideCopy } : {}),
       };
 
-      const html = await buildCozellaHtml(slotIndex, cozellaCopy, dataUrl);
+      const html = mode === "rambux"
+        ? await buildRambuxHtml(slotIndex, templateCopy, dataUrl)
+        : await buildCozellaHtml(slotIndex, templateCopy, dataUrl);
       const pngBuffer = await renderTemplateElement(html, slotIndex);
 
       return new NextResponse(new Uint8Array(pngBuffer), {
         status: 200,
         headers: {
           "Content-Type": "image/png",
-          "Content-Disposition": `attachment; filename="infographic-cozella-slot-0${slotIndex}.png"`,
+          "Content-Disposition": `attachment; filename="infographic-${mode}-slot-0${slotIndex}.png"`,
           "Content-Length": pngBuffer.length.toString(),
         },
       });

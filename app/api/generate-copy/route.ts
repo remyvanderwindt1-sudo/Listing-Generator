@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateCopy, generateCozellaCopy } from "@/lib/claude/generateCopy";
+import { generateCopy, generateCozellaCopy, generateRambuxCopy } from "@/lib/claude/generateCopy";
 import { getSession, setSession } from "@/lib/store";
 import { CopyResult, CozellaCopyResult } from "@/types";
 
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const lang = session.language ?? "nl";
     const mode = session.templateMode ?? "amazon";
 
-    // ── Cozella mode ──────────────────────────────────────────────────────────
-    if (mode === "cozella") {
-      const allCopy = await generateCozellaCopy(
+    // ── Cozella / RAMBUX mode ────────────────────────────────────────────────
+    if (mode === "cozella" || mode === "rambux") {
+      const allCopy = await (mode === "rambux" ? generateRambuxCopy : generateCozellaCopy)(
         session.productName,
         session.category,
         session.insights,

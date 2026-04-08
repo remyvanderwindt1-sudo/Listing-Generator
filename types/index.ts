@@ -125,7 +125,7 @@ export type CozellaSlotCopy =
 
 // ── Shared ───────────────────────────────────────────────────────────────────
 
-export type TemplateMode = "amazon" | "cozella";
+export type TemplateMode = "amazon" | "cozella" | "rambux";
 
 export type Language = "nl" | "en";
 

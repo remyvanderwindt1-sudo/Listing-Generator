@@ -29,8 +29,17 @@ const COZELLA_SLOT_LABELS = [
   "Slide 01 — Kenmerken",
   "Slide 02 — Specificaties",
   "Slide 03 — Interieurstijl",
-  "Slide 04 — Gebruikssstappen",
+  "Slide 04 — Gebruiksstappen",
   "Slide 05 — Kleurvarianten",
+];
+
+const RAMBUX_SLOT_LABELS = [
+  "Slide 00 — Hero",
+  "Slide 01 — Kenmerken",
+  "Slide 02 — Specificaties",
+  "Slide 03 — Activiteiten",
+  "Slide 04 — Gebruik",
+  "Slide 05 — Varianten",
 ];
 
 type ActivePanel = "none" | "tweak" | "style";
@@ -77,7 +86,7 @@ function getSlotCopy(
   session: SessionData,
   index: number
 ): SlotCopy {
-  if (session.templateMode === "cozella" && session.cozellaCopy) {
+  if ((session.templateMode === "cozella" || session.templateMode === "rambux") && session.cozellaCopy) {
     const key = `slot0${index}` as keyof CozellaCopyResult;
     return session.cozellaCopy[key] as unknown as SlotCopy;
   }
@@ -113,7 +122,7 @@ export default function ResultsPage() {
       setSession(s);
       setInsights(s.insights);
 
-      const slotCount = s.templateMode === "cozella" ? 6 : 5;
+      const slotCount = (s.templateMode === "cozella" || s.templateMode === "rambux") ? 6 : 5;
       setSlots(
         Array.from({ length: slotCount }, (_, i) => ({
           copy: getSlotCopy(s, i),
@@ -436,7 +445,8 @@ export default function ResultsPage() {
   }
 
   const isCozella = session.templateMode === "cozella";
-  const slotLabels = isCozella ? COZELLA_SLOT_LABELS : AMAZON_SLOT_LABELS;
+  const isRambux = session.templateMode === "rambux";
+  const slotLabels = isCozella ? COZELLA_SLOT_LABELS : isRambux ? RAMBUX_SLOT_LABELS : AMAZON_SLOT_LABELS;
 
   return (
     <main style={{ background: "#0f0f0f", minHeight: "100vh", color: "white" }}
@@ -454,7 +464,7 @@ export default function ResultsPage() {
         <div className="flex items-center gap-2 mb-6">
           <p className="text-gray-500 text-sm">{session.category}</p>
           <span className="text-xs text-gray-600 border border-[#333] rounded px-1.5 py-0.5">
-            {isCozella ? "Cozella" : "Amazon"}
+            {isCozella ? "Cozella" : isRambux ? "RAMBUX®" : "Amazon"}
           </span>
         </div>
 
@@ -516,13 +526,13 @@ export default function ResultsPage() {
           <div>
             <h1 className="text-2xl font-bold">Jouw infographics</h1>
             <p className="text-gray-500 text-sm mt-1">
-              {isCozella
+              {(isCozella || isRambux)
                 ? "Pas tekst aan of regenereer per slide"
                 : "Pas tekst aan, upload een stijlreferentie of regenereer per slide"}
             </p>
           </div>
 
-          {!isCozella && (
+          {!isCozella && !isRambux && (
             <div>
               <input ref={globalStyleInputRef} type="file" accept="image/jpeg,image/png"
                 className="hidden"
@@ -568,7 +578,7 @@ export default function ResultsPage() {
               slot={slot}
               session={session}
               label={slotLabels[index]}
-              isCozella={isCozella}
+              isCozella={isCozella || isRambux}
               onTweak={() => handleTweak(index)}
               onTweakInputChange={(v) => patchSlot(index, { tweakInput: v })}
               onStyleFile={(file, all) => handleStyleUpload(index, file, all)}

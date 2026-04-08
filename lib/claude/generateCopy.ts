@@ -12,6 +12,8 @@ import {
   GENERATE_COPY_USER,
   GENERATE_COPY_SYSTEM_COZELLA,
   GENERATE_COPY_USER_COZELLA,
+  GENERATE_COPY_SYSTEM_RAMBUX,
+  GENERATE_COPY_USER_RAMBUX,
 } from "./prompts";
 
 const client = new Anthropic();
@@ -80,6 +82,36 @@ export async function generateCozellaCopy(
 ): Promise<CozellaCopyResult> {
   const system = GENERATE_COPY_SYSTEM_COZELLA(language);
   const userMsg = GENERATE_COPY_USER_COZELLA(
+    productName,
+    category,
+    insights.drivers,
+    insights.blockers,
+    insights.voiceOfCustomer
+  );
+
+  let raw: string;
+  try {
+    raw = await callClaude(system, userMsg, temperature);
+    return parseClaudeJSON(raw) as CozellaCopyResult;
+  } catch {
+    raw = await callClaude(system, userMsg, temperature);
+    try {
+      return parseClaudeJSON(raw) as CozellaCopyResult;
+    } catch {
+      throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
+    }
+  }
+}
+
+export async function generateRambuxCopy(
+  productName: string,
+  category: ProductCategory,
+  insights: InsightsResult,
+  language: Language = "nl",
+  temperature = 0.7
+): Promise<CozellaCopyResult> {
+  const system = GENERATE_COPY_SYSTEM_RAMBUX(language);
+  const userMsg = GENERATE_COPY_USER_RAMBUX(
     productName,
     category,
     insights.drivers,
