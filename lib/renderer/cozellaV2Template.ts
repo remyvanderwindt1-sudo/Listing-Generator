@@ -1,37 +1,31 @@
 import { readFile } from "fs/promises";
 import path from "path";
-import { CozellaCopyResult } from "@/types";
+import { CozellaV2CopyResult } from "@/types";
 
 let templateCache: string | null = null;
 
 async function getRawTemplate(): Promise<string> {
   if (!templateCache) {
-    const filePath = path.join(process.cwd(), "rambux-templates.html");
+    const filePath = path.join(process.cwd(), "cozella-v2-templates.html");
     templateCache = await readFile(filePath, "utf-8");
   }
   return templateCache;
 }
 
-/**
- * Builds the full RAMBUX® HTML with all placeholders replaced for a given slot.
- * brandName, accentColor and textColor are hardcoded to RAMBUX® brand values.
- */
-export async function buildRambuxHtml(
+export async function buildCozellaV2Html(
   slotIndex: number,
-  rambuxCopy: CozellaCopyResult,
+  copy: CozellaV2CopyResult,
   photoUrl: string,
-  overlayOpacity: number = 0.6
+  overlayOpacity = 0.75
 ): Promise<string> {
   const rawHtml = await getRawTemplate();
 
-  const slotKey = `slot0${slotIndex}` as keyof CozellaCopyResult;
-  const slotCopy = rambuxCopy[slotKey] as unknown as Record<string, string>;
+  const slotKey = `slot0${slotIndex}` as keyof CozellaV2CopyResult;
+  const slotCopy = copy[slotKey] as unknown as Record<string, string>;
 
   const map: Record<string, string> = {
     photoUrl,
-    brandName: "RAMBUX®",
-    accentColor: "#F5B800",
-    textColor: "#111111",
+    brandName: copy.brandName,
     overlayOpacity: overlayOpacity.toString(),
     ...(slotCopy ?? {}),
   };

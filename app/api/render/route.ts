@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, setSession } from "@/lib/store";
-import { renderTemplate, renderTemplateElement } from "@/lib/renderer/puppeteer";
+import { renderTemplate, renderTemplateElement, renderCozella3Slot } from "@/lib/renderer/puppeteer";
 import {
   slot00Template,
   slot01Template,
@@ -10,8 +10,10 @@ import {
 } from "@/lib/renderer/templates";
 import { buildCozellaHtml } from "@/lib/renderer/cozellaTemplate";
 import { buildRambuxHtml } from "@/lib/renderer/rambuxTemplate";
+import { buildCozellaV2Html } from "@/lib/renderer/cozellaV2Template";
+import { buildCozella3Html } from "@/lib/renderer/cozella3Template";
 import { StyleConfig } from "@/types/style";
-import { CozellaCopyResult } from "@/types";
+import { CozellaCopyResult, CozellaV2CopyResult, CozellaV3Data } from "@/types";
 import path from "path";
 import { readFile } from "fs/promises";
 
@@ -23,11 +25,13 @@ export async function POST(request: NextRequest) {
       slotIndex,
       copy: overrideCopy,
       styleOverride: overrideStyle,
+      overlayOpacity,
     } = body as {
       sessionId: string;
       slotIndex: number;
       copy?: Record<string, unknown>;
       styleOverride?: StyleConfig;
+      overlayOpacity?: number;
     };
 
     if (sessionId === undefined || slotIndex === undefined) {
@@ -68,6 +72,61 @@ export async function POST(request: NextRequest) {
 
     const mode = session.templateMode ?? "amazon";
 
+    // ── Cozella V3 rendering path ─────────────────────────────────────────────
+    if (mode === "cozella3") {
+      if (!session.cozellaV3Data) {
+        return NextResponse.json(
+          { error: "No cozella3 data found for this session." },
+          { status: 400 }
+        );
+      }
+
+      const templateData: CozellaV3Data = {
+        ...session.cozellaV3Data,
+        ...(overrideCopy ? (overrideCopy as Partial<CozellaV3Data>) : {}),
+      };
+
+      const html = await buildCozella3Html(slotIndex, templateData, dataUrl);
+      const pngBuffer = await renderCozella3Slot(html);
+
+      return new NextResponse(new Uint8Array(pngBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": "image/png",
+          "Content-Disposition": `attachment; filename="infographic-cozella3-slot-0${slotIndex}.png"`,
+          "Content-Length": pngBuffer.length.toString(),
+        },
+      });
+    }
+
+    // ── Cozella V2 rendering path ─────────────────────────────────────────────
+    if (mode === "cozella2") {
+      if (!session.cozellaV2Copy) {
+        return NextResponse.json(
+          { error: "No cozella2 copy found for this session." },
+          { status: 400 }
+        );
+      }
+
+      const slotKey = `slot0${slotIndex}` as keyof CozellaV2CopyResult;
+      const templateCopy: CozellaV2CopyResult = {
+        ...session.cozellaV2Copy,
+        ...(overrideCopy ? { [slotKey]: overrideCopy } : {}),
+      };
+
+      const html = await buildCozellaV2Html(slotIndex, templateCopy, dataUrl, overlayOpacity ?? 0.75);
+      const pngBuffer = await renderTemplateElement(html, slotIndex);
+
+      return new NextResponse(new Uint8Array(pngBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": "image/png",
+          "Content-Disposition": `attachment; filename="infographic-cozella2-slot-0${slotIndex}.png"`,
+          "Content-Length": pngBuffer.length.toString(),
+        },
+      });
+    }
+
     // ── Cozella / RAMBUX rendering path ──────────────────────────────────────
     if (mode === "cozella" || mode === "rambux") {
       if (!session.cozellaCopy) {
@@ -84,8 +143,8 @@ export async function POST(request: NextRequest) {
       };
 
       const html = mode === "rambux"
-        ? await buildRambuxHtml(slotIndex, templateCopy, dataUrl)
-        : await buildCozellaHtml(slotIndex, templateCopy, dataUrl);
+        ? await buildRambuxHtml(slotIndex, templateCopy, dataUrl, overlayOpacity ?? 0.6)
+        : await buildCozellaHtml(slotIndex, templateCopy, dataUrl, overlayOpacity ?? 0.75);
       const pngBuffer = await renderTemplateElement(html, slotIndex);
 
       return new NextResponse(new Uint8Array(pngBuffer), {

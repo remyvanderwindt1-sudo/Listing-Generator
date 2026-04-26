@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CopyResult, CozellaCopyResult, InsightsResult, Language, SessionData, SlotCopy } from "@/types";
+import { CopyResult, CozellaCopyResult, CozellaV2CopyResult, CozellaV3Data, InsightsResult, Language, SessionData, SlotCopy } from "@/types";
 import { StyleConfig } from "@/types/style";
 
 // Safely extract an error message from any fetch response (JSON or plain text)
@@ -42,6 +42,26 @@ const RAMBUX_SLOT_LABELS = [
   "Slide 05 — Varianten",
 ];
 
+const COZELLA2_SLOT_LABELS = [
+  "Slide 00 — Hero",
+  "Slide 01 — Features",
+  "Slide 02 — Detail & Specs",
+  "Slide 03 — Vergelijking",
+  "Slide 04 — Quote",
+  "Slide 05 — Closing",
+];
+
+const COZELLA3_SLOT_LABELS = [
+  "Slide 01 — Hero",
+  "Slide 02 — Proces / Features",
+  "Slide 03 — Maten / Specs",
+  "Slide 04 — Gebruik / Vergelijking",
+  "Slide 05 — Detail / Quote",
+  "Slide 06 — Verpakking",
+  "Slide 07 — Materialen / Editorial",
+  "Slide 08 — FAQ",
+];
+
 type ActivePanel = "none" | "tweak" | "style";
 
 interface SlotState {
@@ -61,12 +81,13 @@ async function renderSlot(
   sessionId: string,
   slotIndex: number,
   copy: SlotCopy,
-  styleOverride: StyleConfig | null
+  styleOverride: StyleConfig | null,
+  overlayOpacity?: number
 ): Promise<string> {
   const res = await fetch("/api/render", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, slotIndex, copy, styleOverride }),
+    body: JSON.stringify({ sessionId, slotIndex, copy, styleOverride, overlayOpacity }),
   });
   if (!res.ok) {
     throw new Error(await safeErrorMessage(res, "Render mislukt"));
@@ -82,16 +103,30 @@ function styleToChips(s: StyleConfig): string[] {
   return chips;
 }
 
-function getSlotCopy(
-  session: SessionData,
-  index: number
-): SlotCopy {
+function getSlotCopy(session: SessionData, index: number): SlotCopy {
+  if (session.templateMode === "cozella3" && session.cozellaV3Data) {
+    return session.cozellaV3Data as unknown as SlotCopy;
+  }
+  if (session.templateMode === "cozella2" && session.cozellaV2Copy) {
+    const key = `slot0${index}` as keyof CozellaV2CopyResult;
+    return session.cozellaV2Copy[key] as unknown as SlotCopy;
+  }
   if ((session.templateMode === "cozella" || session.templateMode === "rambux") && session.cozellaCopy) {
     const key = `slot0${index}` as keyof CozellaCopyResult;
     return session.cozellaCopy[key] as unknown as SlotCopy;
   }
   const key = `slot0${index}` as keyof CopyResult;
   return (session.copy as unknown as Record<string, SlotCopy>)[key];
+}
+
+function usesOverlay(mode: string | undefined): boolean {
+  return mode === "cozella" || mode === "rambux" || mode === "cozella2";
+}
+
+function slotCountForMode(mode: string | undefined): number {
+  if (mode === "cozella3") return 8;
+  if (mode === "cozella" || mode === "rambux" || mode === "cozella2") return 6;
+  return 5;
 }
 
 // ── component ────────────────────────────────────────────────────────────────
@@ -108,6 +143,9 @@ export default function ResultsPage() {
   const [regenerating, setRegenerating] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>("nl");
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [overlayOpacity, setOverlayOpacity] = useState(0.6);
   const [globalStyleUploading, setGlobalStyleUploading] = useState(false);
   const [globalStyleProgress, setGlobalStyleProgress] = useState(0);
   const [globalStyleChips, setGlobalStyleChips] = useState<string[]>([]);
@@ -124,8 +162,9 @@ export default function ResultsPage() {
       setSession(s);
       setInsights(s.insights);
       setCurrentLanguage(s.language ?? "nl");
+      setOverlayOpacity(s.templateMode === "rambux" ? 0.6 : 0.75);
 
-      const slotCount = (s.templateMode === "cozella" || s.templateMode === "rambux") ? 6 : 5;
+      const slotCount = slotCountForMode(s.templateMode);
       setSlots(
         Array.from({ length: slotCount }, (_, i) => ({
           copy: getSlotCopy(s, i),
@@ -160,10 +199,10 @@ export default function ResultsPage() {
   // ── render preview for a single slot ─────────────────────────────────────
 
   const refreshPreview = useCallback(
-    async (index: number, copy: SlotCopy, style: StyleConfig | null) => {
+    async (index: number, copy: SlotCopy, style: StyleConfig | null, opacity?: number) => {
       patchSlot(index, { isBusy: true });
       try {
-        const url = await renderSlot(sessionId, index, copy, style);
+        const url = await renderSlot(sessionId, index, copy, style, opacity);
         patchSlot(index, { previewUrl: url, isBusy: false });
       } catch (err) {
         patchSlot(index, { isBusy: false });
@@ -193,7 +232,7 @@ export default function ResultsPage() {
         throw new Error(await safeErrorMessage(res, "Aanpassen mislukt"));
       }
       const { copy: newCopy } = await res.json();
-      const url = await renderSlot(sessionId, index, newCopy, slot.styleOverride);
+      const url = await renderSlot(sessionId, index, newCopy, slot.styleOverride, usesOverlay(session?.templateMode) ? overlayOpacity : undefined);
       patchSlot(index, {
         copy: newCopy,
         previewUrl: url,
@@ -349,7 +388,7 @@ export default function ResultsPage() {
         throw new Error(await safeErrorMessage(res, "Regenereren mislukt"));
       }
       const { copy: newCopy } = await res.json();
-      const url = await renderSlot(sessionId, index, newCopy, slots[index].styleOverride);
+      const url = await renderSlot(sessionId, index, newCopy, slots[index].styleOverride, usesOverlay(session?.templateMode) ? overlayOpacity : undefined);
       patchSlot(index, { copy: newCopy, previewUrl: url, isBusy: false });
     } catch (err) {
       patchSlot(index, { isBusy: false });
@@ -372,8 +411,21 @@ export default function ResultsPage() {
       }
       const { copy: newCopy } = await res.json();
 
-      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
-        // newCopy is a CozellaCopyResult
+      if (session?.templateMode === "cozella3") {
+        const v3Data = newCopy as CozellaV3Data;
+        setSlots((prev) =>
+          prev.map((s) => ({ ...s, copy: v3Data as unknown as SlotCopy, previewUrl: null }))
+        );
+      } else if (session?.templateMode === "cozella2") {
+        const v2Copy = newCopy as CozellaV2CopyResult;
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (v2Copy[`slot0${i}` as keyof CozellaV2CopyResult] as unknown as SlotCopy),
+            previewUrl: null,
+          }))
+        );
+      } else if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
         const cozellaCopy = newCopy as CozellaCopyResult;
         setSlots((prev) =>
           prev.map((s, i) => ({
@@ -404,16 +456,11 @@ export default function ResultsPage() {
     if (lang === currentLanguage || regenerating) return;
     setRegenerating(true);
     try {
-      await fetch(`/api/session/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: lang }),
-      });
-
-      const res = await fetch("/api/generate-copy", {
+      // Translate current copy (including manual tweaks) — do NOT regenerate from reviews
+      const res = await fetch("/api/translate-copy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId, targetLanguage: lang }),
       });
       if (!res.ok) {
         throw new Error(await safeErrorMessage(res, "Taal wisselen mislukt"));
@@ -423,7 +470,21 @@ export default function ResultsPage() {
       setCurrentLanguage(lang);
       setSession((prev) => prev ? { ...prev, language: lang } : prev);
 
-      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
+      if (session?.templateMode === "cozella3") {
+        const v3Data = newCopy as CozellaV3Data;
+        setSlots((prev) =>
+          prev.map((s) => ({ ...s, copy: v3Data as unknown as SlotCopy, previewUrl: null }))
+        );
+      } else if (session?.templateMode === "cozella2") {
+        const v2Copy = newCopy as CozellaV2CopyResult;
+        setSlots((prev) =>
+          prev.map((s, i) => ({
+            ...s,
+            copy: (v2Copy[`slot0${i}` as keyof CozellaV2CopyResult] as unknown as SlotCopy),
+            previewUrl: null,
+          }))
+        );
+      } else if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
         const cozellaCopy = newCopy as CozellaCopyResult;
         setSlots((prev) =>
           prev.map((s, i) => ({
@@ -448,6 +509,50 @@ export default function ResultsPage() {
     }
   };
 
+  // ── Overlay opacity (RAMBUX only) ────────────────────────────────────────
+
+  const handleOverlayChange = useCallback(
+    async (newOpacity: number) => {
+      setOverlayOpacity(newOpacity);
+      // Re-render all slots that already have a preview
+      const slotsWithPreview = slots
+        .map((s, i) => ({ ...s, i }))
+        .filter((s) => s.previewUrl !== null);
+      for (const slot of slotsWithPreview) {
+        patchSlot(slot.i, { isBusy: true });
+        try {
+          const url = await renderSlot(sessionId, slot.i, slot.copy, slot.styleOverride, newOpacity);
+          patchSlot(slot.i, { previewUrl: url, isBusy: false });
+        } catch {
+          patchSlot(slot.i, { isBusy: false });
+        }
+      }
+    },
+    [slots, sessionId, patchSlot]
+  );
+
+  // ── Save project ─────────────────────────────────────────────────────────
+
+  const handleSave = async () => {
+    if (saving || saved) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!res.ok) {
+        throw new Error(await safeErrorMessage(res, "Opslaan mislukt"));
+      }
+      setSaved(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Opslaan mislukt");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Download all ──────────────────────────────────────────────────────────
 
   const handleDownloadAll = async () => {
@@ -458,7 +563,7 @@ export default function ResultsPage() {
     try {
       for (let i = 0; i < slots.length; i++) {
         const slot = slots[i];
-        const url = await renderSlot(sessionId, i, slot.copy, slot.styleOverride);
+        const url = await renderSlot(sessionId, i, slot.copy, slot.styleOverride, usesOverlay(session?.templateMode) ? overlayOpacity : undefined);
         const a = document.createElement("a");
         a.href = url;
         a.download = `infographic-${mode}-slot-0${i}.png`;
@@ -481,7 +586,7 @@ export default function ResultsPage() {
     patchSlot(index, { isBusy: true });
     try {
       const slot = slots[index];
-      const url = await renderSlot(sessionId, index, slot.copy, slot.styleOverride);
+      const url = await renderSlot(sessionId, index, slot.copy, slot.styleOverride, usesOverlay(session?.templateMode) ? overlayOpacity : undefined);
       const a = document.createElement("a");
       a.href = url;
       const mode = session?.templateMode ?? "amazon";
@@ -526,7 +631,9 @@ export default function ResultsPage() {
 
   const isCozella = session.templateMode === "cozella";
   const isRambux = session.templateMode === "rambux";
-  const slotLabels = isCozella ? COZELLA_SLOT_LABELS : isRambux ? RAMBUX_SLOT_LABELS : AMAZON_SLOT_LABELS;
+  const isCozella2 = session.templateMode === "cozella2";
+  const isCozella3 = session.templateMode === "cozella3";
+  const slotLabels = isCozella3 ? COZELLA3_SLOT_LABELS : isCozella ? COZELLA_SLOT_LABELS : isRambux ? RAMBUX_SLOT_LABELS : isCozella2 ? COZELLA2_SLOT_LABELS : AMAZON_SLOT_LABELS;
 
   return (
     <main style={{ background: "#0f0f0f", minHeight: "100vh", color: "white" }}
@@ -544,7 +651,7 @@ export default function ResultsPage() {
         <div className="flex items-center gap-2 mb-6">
           <p className="text-gray-500 text-sm">{session.category}</p>
           <span className="text-xs text-gray-600 border border-[#333] rounded px-1.5 py-0.5">
-            {isCozella ? "Cozella" : isRambux ? "RAMBUX®" : "Amazon"}
+            {isCozella3 ? "Cozella 3" : isCozella ? "Cozella" : isRambux ? "RAMBUX®" : isCozella2 ? "Cozella 2" : "Amazon"}
           </span>
         </div>
 
@@ -597,6 +704,20 @@ export default function ResultsPage() {
           ) : "↺ Alle teksten regenereren"}
         </button>
 
+        <button
+          onClick={handleSave}
+          disabled={saving || saved || regenerating}
+          className={`w-full mt-2 py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+            saved
+              ? "bg-green-800 text-green-300 opacity-80"
+              : "border border-[#444] text-gray-300 hover:bg-[#1a1a1a] hover:text-white disabled:opacity-40"
+          }`}
+        >
+          {saving ? (
+            <><div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />Opslaan...</>
+          ) : saved ? "✓ Opgeslagen" : "💾 Project opslaan"}
+        </button>
+
         {/* Language switcher */}
         <div className="mt-4">
           <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Taal</p>
@@ -638,13 +759,34 @@ export default function ResultsPage() {
           <div>
             <h1 className="text-2xl font-bold">Jouw infographics</h1>
             <p className="text-gray-500 text-sm mt-1">
-              {(isCozella || isRambux)
+              {(isCozella || isRambux || isCozella2 || isCozella3)
                 ? "Pas tekst aan of regenereer per slide"
                 : "Pas tekst aan, upload een stijlreferentie of regenereer per slide"}
             </p>
           </div>
 
-          {!isCozella && !isRambux && (
+          {/* Overlay opacity slider — Cozella + Cozella2 + RAMBUX */}
+          {(isCozella || isRambux || isCozella2) && !isCozella3 && (
+            <div className="flex items-center gap-3 bg-[#141414] border border-[#222] rounded-xl px-4 py-3">
+              <span className="text-xs text-gray-400 whitespace-nowrap">Foto helderheid</span>
+              <span className="text-xs text-gray-600">Lichter</span>
+              <input
+                type="range"
+                min={0.2}
+                max={1.0}
+                step={0.05}
+                value={overlayOpacity}
+                onChange={(e) => handleOverlayChange(parseFloat(e.target.value))}
+                className={`w-32 ${isRambux ? "accent-[#F5B800]" : "accent-[#be9882]"}`}
+              />
+              <span className="text-xs text-gray-600">Donkerder</span>
+              <span className={`text-xs font-mono w-8 text-right ${isRambux ? "text-[#F5B800]" : "text-[#be9882]"}`}>
+                {Math.round(overlayOpacity * 100)}%
+              </span>
+            </div>
+          )}
+
+          {!isCozella && !isRambux && !isCozella2 && !isCozella3 && (
             <div>
               <input ref={globalStyleInputRef} type="file" accept="image/jpeg,image/png"
                 className="hidden"
@@ -690,7 +832,7 @@ export default function ResultsPage() {
               slot={slot}
               session={session}
               label={slotLabels[index]}
-              isCozella={isCozella || isRambux}
+              isCozella={isCozella || isRambux || isCozella2 || isCozella3}
               onTweak={() => handleTweak(index)}
               onTweakInputChange={(v) => patchSlot(index, { tweakInput: v })}
               onStyleFile={(file, all) => handleStyleUpload(index, file, all)}

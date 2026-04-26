@@ -82,6 +82,7 @@
       --ofw:   #F2F0EA;
       --wht:   #FFFFFF;
       --bd:    rgba(255,255,255,0.08);
+      --overlay-mult: {{overlayOpacity}};
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -159,6 +160,11 @@
       font-size: 180px; letter-spacing: 0.01em;
       color: rgba(255,255,255,0.025); line-height: 1;
       text-align: right; z-index: 2;
+    }
+
+    /* ── Overlay opacity control ── */
+    .photo-bg::after, .photo-top::after, .photo-col::after {
+      opacity: var(--overlay-mult);
     }
 
 

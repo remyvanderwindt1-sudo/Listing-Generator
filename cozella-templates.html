@@ -87,6 +87,7 @@
       --rosemid:     #c9a898;
       --muted:       rgba(46,36,32,0.42);
       --border:      rgba(46,36,32,0.10);
+      --overlay-mult: {{overlayOpacity}};
     }
 
     /* ═══════════════════════════════════════
@@ -202,6 +203,9 @@
       height:   100%;
     }
 
+    /* ── Overlay opacity control ── */
+    .slide-overlay { opacity: var(--overlay-mult); }
+
 
     /* ═══════════════════════════════════════
        SLIDE 00 – HERO
@@ -244,10 +248,10 @@
 
     #slide-00 .brand-mark { margin-bottom: 42px; }
 
-    #slide-00 .serif-h { font-size: 88px; }
+    #slide-00 .serif-h { font-size: 100px; }
 
     #slide-00 .jost-sub {
-      font-size:   30px;
+      font-size:   34px;
       margin-top:  18px;
     }
 
@@ -272,7 +276,7 @@
     }
     #slide-00 .ds-t {
       font-family:    'Jost', sans-serif;
-      font-size:      26px;
+      font-size:      30px;
       font-weight:    300;
       letter-spacing: 0.04em;
       color:          var(--dark);
@@ -294,7 +298,7 @@
       text-align:      center;
     }
 
-    #slide-01 .serif-h { font-size: 76px; margin-top: 20px; }
+    #slide-01 .serif-h { font-size: 88px; margin-top: 20px; }
 
     #slide-01 .quad {
       display:               grid;
@@ -321,7 +325,7 @@
 
     #slide-01 .qv {
       font-family:    'Jost', sans-serif;
-      font-size:      26px;
+      font-size:      30px;
       font-weight:    300;
       letter-spacing: 0.02em;
       color:          var(--dark);
@@ -351,7 +355,7 @@
 
     #slide-02 .serif-h {
       color:     #f8f4ef;
-      font-size: 96px;
+      font-size: 110px;
     }
 
     #slide-02 .spec-table {
@@ -369,7 +373,7 @@
 
     #slide-02 .sk {
       font-family:    'Jost', sans-serif;
-      font-size:      24px;
+      font-size:      28px;
       font-weight:    200;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -378,7 +382,7 @@
 
     #slide-02 .sv {
       font-family:    'Jost', sans-serif;
-      font-size:      26px;
+      font-size:      30px;
       font-weight:    300;
       letter-spacing: 0.06em;
       color:          #f8f4ef;
@@ -452,8 +456,8 @@
       align-items:     flex-start;
     }
 
-    #slide-03 .serif-h { font-size: 68px; margin-top: 12px; }
-    #slide-03 .jost-sub { font-size: 26px; margin-top: 10px; }
+    #slide-03 .serif-h { font-size: 78px; margin-top: 12px; }
+    #slide-03 .jost-sub { font-size: 30px; margin-top: 10px; }
 
     #slide-03 .tag-row {
       display:   flex;
@@ -464,7 +468,7 @@
 
     #slide-03 .int-tag {
       font-family:    'Jost', sans-serif;
-      font-size:      20px;
+      font-size:      24px;
       font-weight:    300;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -487,7 +491,7 @@
       padding:         100px 120px;
     }
 
-    #slide-04 .serif-h { font-size: 80px; margin-top: 18px; }
+    #slide-04 .serif-h { font-size: 92px; margin-top: 18px; }
 
     #slide-04 .use-list {
       margin-top:  48px;
@@ -517,7 +521,7 @@
 
     #slide-04 .use-t {
       font-family:    'Jost', sans-serif;
-      font-size:      26px;
+      font-size:      30px;
       font-weight:    300;
       letter-spacing: 0.03em;
       color:          var(--dark);
@@ -526,7 +530,7 @@
 
     #slide-04 .use-sub {
       font-family: 'Jost', sans-serif;
-      font-size:   22px;
+      font-size:   26px;
       font-weight: 200;
       color:       var(--stone);
       line-height: 1.4;
@@ -548,7 +552,7 @@
       text-align:      center;
     }
 
-    #slide-05 .serif-h { font-size: 80px; margin-top: 18px; }
+    #slide-05 .serif-h { font-size: 92px; margin-top: 18px; }
 
     #slide-05 .var-row {
       display:         flex;
@@ -587,7 +591,7 @@
 
     #slide-05 .vn {
       font-family:    'Jost', sans-serif;
-      font-size:      24px;
+      font-size:      28px;
       font-weight:    400;
       letter-spacing: 0.18em;
       text-transform: uppercase;
@@ -597,7 +601,7 @@
     #slide-05 .variant-note {
       margin-top:  50px;
       font-family: 'Jost', sans-serif;
-      font-size:   22px;
+      font-size:   26px;
       font-weight: 200;
       letter-spacing: 0.08em;
       color:       var(--muted);

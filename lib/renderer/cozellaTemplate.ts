@@ -21,7 +21,8 @@ async function getRawTemplate(): Promise<string> {
 export async function buildCozellaHtml(
   slotIndex: number,
   cozellaCopy: CozellaCopyResult,
-  photoUrl: string
+  photoUrl: string,
+  overlayOpacity: number = 0.75
 ): Promise<string> {
   const rawHtml = await getRawTemplate();
 
@@ -34,6 +35,7 @@ export async function buildCozellaHtml(
     brandName: cozellaCopy.brandName,
     accentColor: cozellaCopy.accentColor,
     textColor: cozellaCopy.textColor,
+    overlayOpacity: overlayOpacity.toString(),
     // Spread all fields from the target slot's copy
     ...(slotCopy ?? {}),
   };

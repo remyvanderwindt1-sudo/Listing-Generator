@@ -1,0 +1,112 @@
+{
+  "productName": "Kaarsenhouder RISE",
+  "category": "Home",
+  "language": "nl",
+  "templateMode": "cozella",
+  "insights": {
+    "drivers": [
+      "De sculpturale U-vorm en organische lijnen maken het een decoratief object dat ook zonder kaarsen mooi staat",
+      "De matte keramische afwerking in warme bruine tinten past perfect bij Japandi en Scandinavische interieurs",
+      "Het compacte formaat en stabiele basis met verhoogde voet zorgen voor veelzijdige plaatsingsmogelijkheden",
+      "Het minimalistische ontwerp combineert moeiteloos met natuurlijke materialen zoals hout, linnen en travertin",
+      "Het handgemaakte karakter met unieke kleur- en textuurvariaties geeft elk exemplaar een ambachtelijke uitstraling"
+    ],
+    "blockers": [
+      "Geen informatie over gebruikerservaringen met de stabiliteit bij gebruik van kaarsen",
+      "Onduidelijk of de kaarsopeningen geschikt zijn voor verschillende kaarsdiameters of alleen standaard dinerkaarsen",
+      "Geen reviews beschikbaar om de werkelijke kleurweergave en matte finish te verifiëren",
+      "Geen informatie over onderhoudsgemak en reinigingsmogelijkheden van de keramiek",
+      "Ontbrekende feedback over de prijs-kwaliteitverhouding en duurzaamheid na langdurig gebruik"
+    ],
+    "voiceOfCustomer": [
+      "Ik zoek een kaarsenhouder die past bij mijn Japandi interieur met warme aardetinten",
+      "Het moet decoratief genoeg zijn om ook zonder kaarsen als design object te functioneren",
+      "Ik wil een compacte kandelaar die stabiel staat en niet te veel ruimte inneemt op mijn salontafel",
+      "De matte afwerking en organische vorm moeten goed combineren met mijn natuurlijke materialen",
+      "Ik waardeer ambachtelijke details en unieke stukken boven massaproductie"
+    ]
+  },
+  "copy": {},
+  "cozellaCopy": {
+    "brandName": "Kaarsenhouder RISE",
+    "accentColor": "#A67C52",
+    "textColor": "#3D3026",
+    "slot00": {
+      "headline": "Sculpturale kaarsenhouder met organische U-vorm",
+      "subline": "Sculpturaal decoratiestuk voor een warm, stijlvol interieur",
+      "bullet_0": "Matte keramische afwerking met textuur",
+      "bullet_1": "Compacte basis met verhoogde voet",
+      "bullet_2": "Sfeervol als decoratie, ook zonder kaarsen",
+      "bullet_3": "Ambachtelijk met unieke kleurvariaties"
+    },
+    "slot01": {
+      "headline": "Past bij natuurlijke interieurs",
+      "bullet_0": "Combineert met hout, linnen en natuursteen",
+      "bullet_1": "Veelzijdig plaatsbaar op salontafel",
+      "bullet_2": "Minimalistische vormgeving met warmte",
+      "bullet_3": "Stabiele basis voor veilig gebruik"
+    },
+    "slot02": {
+      "headline": "Specificaties en materialen",
+      "spec_label_0": "Materiaal",
+      "spec_val_0": "Keramiek",
+      "spec_label_1": "Afwerking",
+      "spec_val_1": "Mat",
+      "spec_label_2": "Kleur",
+      "spec_val_2": "Terracotta, zalmroze, wijnrood, chocoladebruin",
+      "spec_label_3": "Vormgeving",
+      "spec_val_3": "Organische U-vorm",
+      "spec_label_4": "Basis",
+      "spec_val_4": "Verhoogde voet voor stabiliteit",
+      "spec_label_5": "Productie",
+      "spec_val_5": "Handgemaakt"
+    },
+    "slot03": {
+      "headline": "Passend bij meerdere interieurstijlen",
+      "subline": "Gemaakt voor interieurs die warmte en rust uitstralen",
+      "style_tag_0": "Japandi",
+      "style_tag_1": "Scandinavisch",
+      "style_tag_2": "Natuurlijk",
+      "style_tag_3": "Minimalistisch"
+    },
+    "slot04": {
+      "headline": "Zo combineer je RISE",
+      "step_0": "Plaats op salontafel of wandplank",
+      "step_0_sub": "Stabiele voet voorkomt kantelen",
+      "step_1": "Combineer met linnen, hout of droogbloemen",
+      "step_1_sub": "Matte afwerking harmonieert met natuurlijke texturen",
+      "step_2": "Gebruik dinerkaarsen voor stemmige sfeer",
+      "step_2_sub": "Controleer kaarsdiameter voor goede pasvorm",
+      "step_3": "Eenvoudig schoon te houden met een vochtige doek",
+      "step_3_sub": "Matte finish vraagt om voorzichtig onderhoud"
+    },
+    "slot05": {
+      "headline": "Kies jouw kleur — vier warme variaties",
+      "variant_0": "Terracotta",
+      "variant_0_color": "#E07856",
+      "variant_1": "Wijnrood",
+      "variant_1_color": "#8B4049",
+      "variant_2": "Chocoladebruin",
+      "variant_2_color": "#5C4033",
+      "variant_3": "Zalmroze",
+      "variant_3_color": "#F2A592",
+      "variant_note": "Handgemaakt: kleur varieert per exemplaar"
+    }
+  },
+  "photoPaths": [
+    "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901292_tNmaPD.jpg",
+    "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901433_LJRwz9.jpg",
+    "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901519_xV93Jp.jpg",
+    "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901613_gcdZ6y.jpg"
+  ],
+  "slotPhotoMap": {
+    "0": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901292_tNmaPD.jpg",
+    "1": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901433_LJRwz9.jpg",
+    "2": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901519_xV93Jp.jpg",
+    "3": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901613_gcdZ6y.jpg",
+    "4": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901292_tNmaPD.jpg",
+    "5": "/projects/VtUmWUEadCiFqdimwsRxO/photo_1776507901433_LJRwz9.jpg"
+  },
+  "createdAt": 1776507901709,
+  "savedAt": 1776510205860
+}

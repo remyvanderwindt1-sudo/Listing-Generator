@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Language, ProductCategory, TemplateMode } from "@/types";
+import type { ProjectMeta } from "@/lib/projectStore";
 
 async function safeErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
@@ -50,6 +51,33 @@ export default function HomePage() {
   const [step, setStep] = useState<Step>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [savedProjects, setSavedProjects] = useState<ProjectMeta[]>([]);
+  const [resuming, setResuming] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) => setSavedProjects(d.projects ?? []))
+      .catch(() => {});
+  }, []);
+
+  const handleResume = async (sessionId: string) => {
+    setResuming(sessionId);
+    try {
+      const res = await fetch(`/api/projects/${sessionId}`);
+      if (!res.ok) throw new Error("Project niet gevonden");
+      router.push(`/results/${sessionId}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Hervatten mislukt");
+      setResuming(null);
+    }
+  };
+
+  const handleDeleteProject = async (sessionId: string) => {
+    if (!confirm("Project verwijderen?")) return;
+    await fetch(`/api/projects/${sessionId}`, { method: "DELETE" });
+    setSavedProjects((prev) => prev.filter((p) => p.sessionId !== sessionId));
+  };
 
   const addFiles = useCallback(
     (files: FileList | File[]) => {
@@ -186,12 +214,61 @@ export default function HomePage() {
           Upload photos + paste reviews → get 5 ready-to-use listing images
         </p>
 
+        {/* Saved projects */}
+        {savedProjects.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">
+              Opgeslagen projecten
+            </h2>
+            <div className="space-y-2">
+              {savedProjects.map((p) => (
+                <div
+                  key={p.sessionId}
+                  className="flex items-center gap-3 bg-[#141414] border border-[#222] rounded-xl px-4 py-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm truncate">{p.productName}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-500 border border-[#333] rounded px-1.5 py-0.5">
+                        {p.templateMode === "rambux" ? "RAMBUX®" : p.templateMode === "cozella" ? "Cozella" : p.templateMode === "cozella2" ? "Cozella 2" : p.templateMode === "cozella3" ? "Cozella 3" : "Amazon"}
+                      </span>
+                      <span className="text-xs text-gray-500 border border-[#333] rounded px-1.5 py-0.5 uppercase">
+                        {p.language}
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {new Date(p.savedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleResume(p.sessionId)}
+                    disabled={resuming === p.sessionId}
+                    className="px-3 py-1.5 bg-white text-black text-xs font-semibold rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {resuming === p.sessionId ? (
+                      <><div className="w-3 h-3 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />Laden...</>
+                    ) : "▶ Hervatten"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProject(p.sessionId)}
+                    className="text-gray-600 hover:text-red-400 transition-colors text-lg leading-none px-1"
+                    title="Verwijderen"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 border-t border-[#222]" />
+          </div>
+        )}
+
         {/* Template mode selector */}
         <div className="mb-8">
           <span className="block text-sm font-semibold text-gray-300 mb-3 uppercase tracking-widest">
             Template
           </span>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setTemplateMode("amazon")}
               disabled={isLoading}
@@ -205,18 +282,6 @@ export default function HomePage() {
               <div className="text-xs text-gray-500">5 slides · Aanpasbare stijl</div>
             </button>
             <button
-              onClick={() => setTemplateMode("cozella")}
-              disabled={isLoading}
-              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
-                templateMode === "cozella"
-                  ? "border-white bg-white/5"
-                  : "border-[#333] hover:border-[#555]"
-              }`}
-            >
-              <div className="text-base font-semibold mb-0.5">Cozella</div>
-              <div className="text-xs text-gray-500">6 slides · Premium lifestyle stijl</div>
-            </button>
-            <button
               onClick={() => setTemplateMode("rambux")}
               disabled={isLoading}
               className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
@@ -227,6 +292,42 @@ export default function HomePage() {
             >
               <div className="text-base font-semibold mb-0.5">RAMBUX®</div>
               <div className="text-xs text-gray-500">6 slides · Adventure huisstijl</div>
+            </button>
+            <button
+              onClick={() => setTemplateMode("cozella")}
+              disabled={isLoading}
+              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "cozella"
+                  ? "border-[#C4704A] bg-[#C4704A]/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">Cozella</div>
+              <div className="text-xs text-gray-500">6 slides · Premium lifestyle stijl</div>
+            </button>
+            <button
+              onClick={() => setTemplateMode("cozella2")}
+              disabled={isLoading}
+              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "cozella2"
+                  ? "border-[#BFA46A] bg-[#BFA46A]/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">Cozella 2</div>
+              <div className="text-xs text-gray-500">6 slides · Terracotta &amp; goud</div>
+            </button>
+            <button
+              onClick={() => setTemplateMode("cozella3")}
+              disabled={isLoading}
+              className={`col-span-2 p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+                templateMode === "cozella3"
+                  ? "border-[#BFA46A] bg-[#BFA46A]/5"
+                  : "border-[#333] hover:border-[#555]"
+              }`}
+            >
+              <div className="text-base font-semibold mb-0.5">Cozella 3 — Editorial</div>
+              <div className="text-xs text-gray-500">8 slides · 2000×2000 · JavaScript-template met terracotta &amp; goud</div>
             </button>
           </div>
         </div>

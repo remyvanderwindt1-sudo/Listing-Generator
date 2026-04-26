@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateCopy, generateCozellaCopy, generateRambuxCopy } from "@/lib/claude/generateCopy";
+import { generateCopy, generateCozellaCopy, generateCozellaV2Copy, generateCozella3Copy, generateRambuxCopy } from "@/lib/claude/generateCopy";
 import { getSession, setSession } from "@/lib/store";
-import { CopyResult, CozellaCopyResult } from "@/types";
+import { CopyResult, CozellaCopyResult, CozellaV2CopyResult } from "@/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +36,43 @@ export async function POST(request: NextRequest) {
 
     const lang = session.language ?? "nl";
     const mode = session.templateMode ?? "amazon";
+
+    // ── Cozella V3 mode ──────────────────────────────────────────────────────
+    if (mode === "cozella3") {
+      const allCopy = await generateCozella3Copy(
+        session.productName,
+        session.category,
+        session.insights,
+        lang,
+        temperature
+      );
+      setSession(sessionId, { ...session, cozellaV3Data: allCopy });
+      return NextResponse.json({ copy: allCopy });
+    }
+
+    // ── Cozella V2 mode ──────────────────────────────────────────────────────
+    if (mode === "cozella2") {
+      const allCopy = await generateCozellaV2Copy(
+        session.productName,
+        session.category,
+        session.insights,
+        lang,
+        temperature
+      );
+
+      if (slotIndex !== undefined) {
+        const slotKey = `slot0${slotIndex}` as keyof CozellaV2CopyResult;
+        const updated: CozellaV2CopyResult = {
+          ...(session.cozellaV2Copy ?? allCopy),
+          [slotKey]: allCopy[slotKey],
+        };
+        setSession(sessionId, { ...session, cozellaV2Copy: updated });
+        return NextResponse.json({ copy: allCopy[slotKey], slotIndex });
+      }
+
+      setSession(sessionId, { ...session, cozellaV2Copy: allCopy });
+      return NextResponse.json({ copy: allCopy });
+    }
 
     // ── Cozella / RAMBUX mode ────────────────────────────────────────────────
     if (mode === "cozella" || mode === "rambux") {

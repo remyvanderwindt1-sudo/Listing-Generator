@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>Cozella® — Infographic Template (editorial)</title>
+<meta name="viewport" content="width=2000,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:      #F5EFE4;
+    --ivory:      #FAF6EF;
+    --sand:       #E8DDD0;
+    --mist:       #EDE6DC;
+    --terracotta: #C4704A;
+    --rust:       #A8543A;
+    --gold:       #BFA46A;
+    --gold-light: #D4BC84;
+    --charcoal:   #2C2420;
+    --warm-dark:  #1E1916;
+    --rose:       #D4A898;
+    --muted:      #6B5E54;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ background:#141210; color:var(--charcoal); font-family:'Jost', sans-serif;}
+  body{ display:flex; align-items:flex-start; justify-content:center; padding:40px; min-height:100vh;}
+
+  /* === CANVAS === */
+  .canvas{
+    width:2000px; height:2000px; position:relative; overflow:hidden;
+    background: var(--cream); transform-origin: top center; flex:0 0 auto;
+  }
+  #slot{ position:absolute; inset:0; }
+  body.preview .canvas{ transform: scale(var(--preview-scale, 0.42)); }
+  body.preview{ min-height: calc(2000px * 0.42 + 120px); }
+
+  /* === GRAIN === */
+  .grain{
+    position:absolute; inset:0; pointer-events:none; z-index:30;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity:.5;
+  }
+
+  /* === SHARED SLIDE ELEMENTS === */
+  .slide-label{
+    position:absolute; top: 80px; right: 90px;
+    font-family:'Jost', sans-serif; font-weight:300;
+    font-size:26px; letter-spacing:.32em; text-transform:uppercase;
+    color: var(--gold); z-index:10;
+  }
+  .brand-mark{
+    position:absolute; top: 160px; left: 146px;
+    font-family:'Jost', sans-serif; font-weight:200;
+    font-size:28px; letter-spacing:.5em; text-transform:uppercase;
+    color: var(--gold);
+  }
+
+  /* === PHOTO FRAME (corners gold) === */
+  .img-frame{
+    position:relative; width:100%; height:100%;
+    border:1px solid rgba(191,164,106,.3);
+    background: rgba(250,246,239,.06);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .img-frame img{ width:100%; height:100%; object-fit:cover; display:block;}
+  .img-frame::before, .img-frame::after{
+    content:''; position:absolute; width:40px; height:40px; z-index:2;
+  }
+  .img-frame::before{ top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold);}
+  .img-frame::after { bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold);}
+  .img-frame .img-label{
+    font-family:'Jost', sans-serif; font-weight:200;
+    font-size:24px; letter-spacing:.4em; color: var(--gold); text-transform:uppercase;
+  }
+  .img-frame--dark{ background: rgba(20,18,15,.05); border-color: rgba(44,36,32,.18);}
+  .img-frame--dark::before, .img-frame--dark::after{ border-color: var(--terracotta); }
+  .img-frame--dark .img-label{ color: var(--terracotta); }
+
+  /* =====================================================
+     LAYOUT 1 — HERO (dark + sand split)
+     ===================================================== */
+  .l1{ width:100%; height:100%; position:relative; background: var(--warm-dark);}
+  .l1 .bg-split{
+    position:absolute; right:0; top:0; width: 900px; height:100%;
+    background: var(--sand); clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .l1 .bg-split::after{
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(160deg, rgba(196,112,74,.15) 0%, transparent 60%);
+  }
+  .l1 .accent-line{
+    position:absolute; left: 106px; top: 186px; width:1px; height:292px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+  }
+  .l1 .headline-block{ position:absolute; left:106px; top:506px; width: 1040px; z-index:2;}
+  .l1 .eyebrow{
+    font-family:'Jost'; font-weight:400;
+    font-size:32px; letter-spacing:.3em; text-transform:uppercase;
+    color: var(--terracotta); margin-bottom:44px;
+  }
+  .l1 h1{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 210px; line-height:.92; color: var(--ivory);
+    letter-spacing:-.01em;
+  }
+  .l1 h1 em{ font-style:italic; color: var(--gold-light);}
+  .l1 .tagline{
+    margin-top: 60px; font-family:'Jost'; font-weight:300;
+    font-size: 38px; letter-spacing:.08em; text-transform:none;
+    color: rgba(250,246,239,.7); line-height:1.5; width: 900px;
+  }
+  .l1 .product-placeholder{
+    position:absolute; right: 80px; top: 50%;
+    transform: translateY(-50%); width: 780px; height: 960px;
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .l1 .product-placeholder .img-frame{
+    width: 620px; height: 800px;
+  }
+  .l1 .bottom-bar{
+    position:absolute; bottom:0; left:0; right:0; height: 110px;
+    border-top:1px solid rgba(191,164,106,.15);
+    display:flex; align-items:center; padding: 0 106px; gap: 80px; z-index:2;
+  }
+  .l1 .bottom-bar .stat{ display:flex; align-items:baseline; gap:16px;}
+  .l1 .bottom-bar{ height: 150px; }
+  .l1 .bottom-bar .stat .num{
+    font-family:'Cormorant Garamond', serif; font-weight:400;
+    font-size:58px; color: var(--gold-light);
+  }
+  .l1 .bottom-bar .stat .desc{
+    font-family:'Jost'; font-weight:300;
+    font-size:22px; letter-spacing:.25em; text-transform:uppercase;
+    color: rgba(250,246,239,.55);
+  }
+  .l1 .bottom-bar .divider{ width:1px; height:36px; background: rgba(191,164,106,.2);}
+
+  /* =====================================================
+     LAYOUT 2 — FEATURES (3 cards)
+     ===================================================== */
+  .l2{ width:100%; height:100%; background: var(--ivory);
+       padding: 140px 106px; display:flex; flex-direction:column; gap:0; position:relative;}
+  .l2 .top-rule{ width:100%; height:1px; background: linear-gradient(to right, var(--gold), transparent); margin-bottom: 94px;}
+  .l2 .section-header{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom: 106px;}
+  .l2 .section-header h2{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 170px; line-height:1; color: var(--charcoal); letter-spacing:-.02em;
+  }
+  .l2 .section-header h2 em{ font-style:italic; color: var(--terracotta);}
+  .l2 .section-header .subtitle{
+    font-family:'Jost'; font-weight:300;
+    font-size:26px; letter-spacing:.22em; text-transform:uppercase;
+    color: var(--gold); padding-bottom:26px; text-align:right; line-height:1.8;
+  }
+  .l2 .features-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:2px; flex:1;}
+  .l2 .feature-card{
+    background: var(--mist); padding: 68px 62px;
+    position:relative; display:flex; flex-direction:column; gap:30px;
+  }
+  .l2 .feature-card:first-child{ background: var(--charcoal);}
+  .l2 .feature-card:first-child .feat-title,
+  .l2 .feature-card:first-child .feat-body{ color: var(--ivory);}
+  .l2 .feature-card:first-child .feat-body{ color: rgba(250,246,239,.6);}
+  .l2 .feature-card:first-child .feat-num{ color: var(--gold);}
+  .l2 .feat-num{
+    font-family:'Cormorant Garamond', serif; font-size:36px; font-weight:400;
+    color: var(--terracotta); letter-spacing:.1em;
+  }
+  .l2 .feat-icon{ width:72px; height:2px; background: var(--gold); margin:10px 0;}
+  .l2 .feat-title{
+    font-family:'Cormorant Garamond', serif; font-weight:500;
+    font-size:58px; color: var(--charcoal); line-height:1.1;
+  }
+  .l2 .feat-body{
+    font-family:'Jost'; font-weight:300;
+    font-size: 30px; line-height:1.55; color: var(--muted);
+  }
+  .l2 .bottom-accent{ position:absolute; bottom:0; left:0; width:48px; height:3px; background: var(--gold);}
+
+  /* =====================================================
+     LAYOUT 3 — SPECS (left dark panel + right spec list)
+     ===================================================== */
+  .l3{ width:100%; height:100%; background: var(--sand); display:flex;}
+  .l3 .left-panel{
+    width: 920px; height:100%; background: var(--charcoal);
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding: 106px; position:relative;
+  }
+  .l3 .left-panel .bg-texture{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(196,112,74,.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(191,164,106,.08) 0%, transparent 50%);
+  }
+  .l3 .vertical-text{
+    position:absolute; top:106px; right:66px;
+    font-family:'Jost'; font-weight:300;
+    font-size:22px; letter-spacing:.5em; text-transform:uppercase;
+    color: rgba(191,164,106,.55);
+    writing-mode: vertical-rl; text-orientation: mixed;
+  }
+  .l3 .left-panel h3{
+    font-family:'Cormorant Garamond', serif; font-weight:300; font-style:italic;
+    font-size:140px; line-height:1; color: var(--ivory);
+    margin-bottom: 44px; position:relative; z-index:1;
+  }
+  .l3 .highlight-pill{
+    display:inline-flex; align-items:center; gap:18px;
+    background: var(--terracotta); padding: 16px 32px;
+    margin-bottom: 48px; position:relative; z-index:1; width:fit-content;
+  }
+  .l3 .highlight-pill span{
+    font-family:'Jost'; font-weight:500;
+    font-size:26px; letter-spacing:.3em; text-transform:uppercase;
+    color: var(--ivory);
+  }
+  .l3 .left-panel p{
+    font-family:'Jost'; font-weight:300;
+    font-size: 32px; line-height:1.55; color: rgba(250,246,239,.75);
+    max-width: 720px; position:relative; z-index:1;
+  }
+  .l3 .right-panel{
+    flex:1; display:flex; flex-direction:column;
+    padding: 106px 94px; gap: 50px; justify-content:center;
+  }
+  .l3 .spec-item{
+    display:flex; gap: 42px; align-items:flex-start;
+    padding-bottom: 50px; border-bottom: 1px solid rgba(44,36,32,.12);
+  }
+  .l3 .spec-item:last-child{ border-bottom:none;}
+  .l3 .spec-num{
+    font-family:'Cormorant Garamond', serif; font-size:96px; font-weight:300;
+    color: var(--terracotta); line-height:1; min-width:140px; opacity:.75;
+  }
+  .l3 .spec-content h4{
+    font-family:'Cormorant Garamond', serif; font-weight:500;
+    font-size: 52px; color: var(--charcoal); margin-bottom:16px;
+  }
+  .l3 .spec-content p{
+    font-family:'Jost'; font-weight:300;
+    font-size:30px; line-height:1.5; color: var(--muted);
+  }
+
+  /* =====================================================
+     LAYOUT 4 — COMPARISON (zonder vs met)
+     ===================================================== */
+  .l4{ width:100%; height:100%; background: var(--ivory);
+       display:flex; flex-direction:column; align-items:center; justify-content:center;
+       padding: 140px;}
+  .l4 .s4-eyebrow{
+    font-family:'Jost'; font-weight:400;
+    font-size:26px; letter-spacing:.45em; text-transform:uppercase;
+    color: var(--terracotta); margin-bottom: 44px; text-align:center;
+  }
+  .l4 h2{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 170px; line-height:1; text-align:center; color: var(--charcoal); margin-bottom:20px;
+  }
+  .l4 h2 em{ font-style:italic; color: var(--gold);}
+  .l4 .rule{ width:110px; height:1px; background: var(--gold); margin: 56px auto;}
+  .l4 .comparison-grid{
+    display:grid; grid-template-columns: 1fr auto 1fr;
+    width:100%; margin-top:30px; align-items:stretch;
+  }
+  .l4 .col{ padding: 66px 78px; display:flex; flex-direction:column; gap:34px;}
+  .l4 .col.without{ background: var(--mist);}
+  .l4 .col.with{ background: var(--charcoal);}
+  .l4 .col-label{
+    font-family:'Jost'; font-weight:400;
+    font-size:24px; letter-spacing:.5em; text-transform:uppercase; margin-bottom:28px;
+  }
+  .l4 .col.without .col-label{ color: var(--terracotta);}
+  .l4 .col.with .col-label{ color: var(--gold);}
+  .l4 .col-item{
+    display:flex; align-items:flex-start; gap:26px;
+    font-family:'Jost'; font-weight:400; font-size:34px; line-height:1.35;
+  }
+  .l4 .col.without .col-item{ color: #8a7970;}
+  .l4 .col.with .col-item{ color: rgba(250,246,239,.85);}
+  .l4 .col-item .icon{ font-size:32px; flex-shrink:0; margin-top:4px;}
+  .l4 .center-divider{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 0 40px; gap:20px;
+  }
+  .l4 .vs-circle{
+    width:130px; height:130px; border:1px solid var(--gold); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif; font-size:44px; font-weight:400;
+    color: var(--gold); background: var(--ivory);
+  }
+  .l4 .vert-line{ width:1px; flex:1; background: linear-gradient(to bottom, transparent, var(--gold), transparent);}
+
+  /* =====================================================
+     LAYOUT 5 — QUOTE (terracotta)
+     ===================================================== */
+  .l5{ width:100%; height:100%; background: var(--terracotta); position:relative;
+       display:flex; flex-direction:column; align-items:center; justify-content:center;
+       padding: 160px;}
+  .l5 .bg-pattern{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 10% 90%, rgba(0,0,0,.15) 0%, transparent 50%),
+      radial-gradient(circle at 90% 10%, rgba(250,246,239,.08) 0%, transparent 50%);
+  }
+  .l5 .big-quote{
+    font-family:'Cormorant Garamond', serif; font-size:300px; font-weight:300;
+    color: rgba(250,246,239,.15); line-height:1;
+    position:absolute; top:80px; left:106px;
+  }
+  .l5 .quote-text{
+    font-family:'Cormorant Garamond', serif; font-weight:400; font-style:italic;
+    font-size: 120px; line-height:1.2; color: var(--ivory);
+    text-align:center; max-width: 1600px; position:relative; z-index:1; margin-bottom: 80px;
+  }
+  .l5 .rule{ width:100px; height:1px; background: rgba(250,246,239,.5); margin: 0 auto 44px;}
+  .l5 .quote-attr{
+    font-family:'Jost'; font-weight:400;
+    font-size:28px; letter-spacing:.4em; text-transform:uppercase;
+    color: rgba(250,246,239,.85); text-align:center; position:relative; z-index:1;
+  }
+  .l5 .corner-brand{
+    position:absolute; bottom: 94px; right:106px;
+    font-family:'Cormorant Garamond', serif; font-size:36px; font-weight:400; font-style:italic;
+    color: rgba(250,246,239,.55); letter-spacing:.1em; z-index:1;
+  }
+
+  /* =====================================================
+     LAYOUT 6 — CTA CLOSING (dark, ornament)
+     ===================================================== */
+  .l6{ width:100%; height:100%; background: var(--warm-dark); position:relative;
+       display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .l6 .bg-glow{
+    position:absolute; width:1100px; height:1100px; border-radius:50%;
+    background: radial-gradient(circle, rgba(191,164,106,.08) 0%, transparent 70%);
+    top:50%; left:50%; transform: translate(-50%,-50%);
+  }
+  .l6 .top-ornament{
+    position:absolute; top:106px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:26px;
+  }
+  .l6 .top-ornament .line{ width: 160px; height:1px; background: linear-gradient(to right, transparent, var(--gold));}
+  .l6 .top-ornament .line.right{ background: linear-gradient(to left, transparent, var(--gold));}
+  .l6 .top-ornament .diamond{ width:8px; height:8px; background: var(--gold); transform: rotate(45deg);}
+  .l6 .eyebrow{
+    font-family:'Jost'; font-weight:300;
+    font-size:28px; letter-spacing:.5em; text-transform:uppercase;
+    color: var(--gold); margin-bottom:48px; text-align:center; position:relative; z-index:1;
+  }
+  .l6 h2{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 210px; line-height:1; color: var(--ivory); text-align:center;
+    letter-spacing:-.01em; position:relative; z-index:1; margin-bottom:12px;
+  }
+  .l6 h2 em{ font-style:italic; color: var(--gold-light);}
+  .l6 .cta-sub{
+    font-family:'Jost'; font-weight:300;
+    font-size: 36px; letter-spacing:.15em; text-transform:uppercase;
+    color: rgba(250,246,239,.6); text-align:center; margin: 50px 0 100px;
+    position:relative; z-index:1;
+  }
+  .l6 .pack-list{
+    position:relative; z-index:1; margin-top: 80px;
+    display:flex; flex-direction:column; gap:36px;
+    max-width: 1400px; margin-left:auto; margin-right:auto;
+    padding: 0 80px;
+  }
+  .l6 .pack-row{
+    display:flex; align-items:center; gap: 48px;
+    padding: 38px 0;
+    border-bottom: 1px solid rgba(191,164,106,.25);
+  }
+  .l6 .pack-num{
+    font-family:'Cormorant Garamond', serif; font-weight:300; font-style:italic;
+    font-size: 72px; color: var(--gold); line-height:1; min-width: 100px;
+  }
+  .l6 .pack-text{
+    font-family:'Jost'; font-weight:300;
+    font-size: 40px; color: var(--ivory); line-height:1.35;
+  }
+  .l6 .bottom-strip{
+    position:absolute; bottom:0; left:0; right:0; height:5px;
+    background: linear-gradient(to right, transparent, var(--gold), var(--terracotta), var(--gold), transparent);
+  }
+  .l6 .brand-footer{
+    position:absolute; bottom: 66px; left:50%; transform:translateX(-50%);
+    font-family:'Jost'; font-weight:300;
+    font-size:22px; letter-spacing:.5em; text-transform:uppercase;
+    color: rgba(250,246,239,.4); white-space:nowrap; z-index:1;
+  }
+
+  /* =====================================================
+     LAYOUT 7 — EDITORIAL SQUARE (single product, full frame)
+     ===================================================== */
+  .l7{ width:100%; height:100%; background: var(--ivory); padding: 140px 120px;
+       display:grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items:center;}
+  .l7 .photo-col{ height: 1600px; position:relative;}
+  .l7 .photo-col .img-frame{ width:100%; height:100%; }
+  .l7 .photo-col .corner-badge{
+    position:absolute; top: -20px; left: -20px; z-index:3;
+    background: var(--charcoal); color: var(--gold);
+    padding: 22px 34px;
+    font-family:'Jost'; font-weight:400;
+    font-size:22px; letter-spacing:.4em; text-transform:uppercase;
+  }
+  .l7 .copy-col{ display:flex; flex-direction:column; gap: 44px;}
+  .l7 .copy-col .eyebrow{
+    font-family:'Jost'; font-weight:400;
+    font-size:26px; letter-spacing:.4em; text-transform:uppercase;
+    color: var(--terracotta);
+  }
+  .l7 .copy-col h1{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 180px; line-height:.92; color: var(--charcoal); letter-spacing:-.01em;
+  }
+  .l7 .copy-col h1 em{ font-style:italic; color: var(--gold);}
+  .l7 .copy-col .intro{
+    font-family:'Jost'; font-weight:300;
+    font-size: 34px; line-height:1.5; color: var(--muted); max-width: 800px;
+  }
+  .l7 .thin-rule{ width: 80px; height:1px; background: var(--gold);}
+  .l7 .bullets{ display:flex; flex-direction:column; gap: 22px;}
+  .l7 .bullets .row{
+    display:flex; align-items:center; gap:28px;
+    font-family:'Jost'; font-weight:400; font-size: 32px; color: var(--charcoal);
+    padding-bottom: 26px; border-bottom: 1px solid rgba(44,36,32,.12);
+  }
+  .l7 .bullets .row .mark{
+    font-family:'Cormorant Garamond', serif; font-style:italic;
+    font-size: 40px; color: var(--terracotta); min-width: 64px;
+  }
+  .l7 .priceline{
+    display:flex; align-items:baseline; gap: 28px; margin-top: 20px;
+  }
+  .l7 .priceline .now{
+    font-family:'Cormorant Garamond', serif; font-weight:400;
+    font-size: 130px; color: var(--terracotta); line-height:1;
+  }
+  .l7 .priceline .old{
+    font-family:'Jost'; font-weight:300; font-size:36px;
+    color: var(--muted); text-decoration: line-through;
+  }
+
+  /* =====================================================
+     LAYOUT 8 — TESTIMONIAL / RATINGS (cream, editorial)
+     ===================================================== */
+  .l8{ width:100%; height:100%; background: var(--cream);
+       padding: 140px 120px; display:flex; flex-direction:column; gap: 72px;}
+  .l8 .hd{ display:flex; align-items:flex-end; justify-content:space-between;}
+  .l8 .hd h2{
+    font-family:'Cormorant Garamond', serif; font-weight:300;
+    font-size: 180px; line-height:1; color: var(--charcoal); letter-spacing:-.01em;
+  }
+  .l8 .hd h2 em{ font-style:italic; color: var(--terracotta);}
+  .l8 .rule{ height:1px; background: linear-gradient(to right, var(--gold), transparent);}
+  .l8 .faq-list{
+    display:flex; flex-direction:column; gap: 48px;
+    flex:1;
+  }
+  .l8 .faq-item{
+    padding-bottom: 40px; border-bottom:1px solid rgba(44,36,32,.15);
+  }
+  .l8 .faq-q{
+    display:flex; align-items:baseline; gap: 28px;
+    font-family:'Cormorant Garamond', serif; font-weight:500;
+    font-size: 58px; line-height:1.15; color: var(--charcoal);
+    margin-bottom: 20px;
+  }
+  .l8 .faq-q .q-mark{
+    font-family:'Cormorant Garamond', serif; font-style:italic; font-weight:400;
+    font-size: 48px; color: var(--terracotta); min-width: 80px;
+  }
+  .l8 .faq-a{
+    font-family:'Jost'; font-weight:300;
+    font-size: 34px; line-height:1.45; color: var(--muted);
+    padding-left: 108px;
+  }
+  .l8 .ft{
+    margin-top:auto; display:flex; align-items:center; justify-content:space-between;
+    padding-top: 30px; border-top:1px solid rgba(44,36,32,.12);
+  }
+  .l8 .ft .brand{
+    font-family:'Cormorant Garamond', serif; font-size:42px; font-style:italic; color: var(--muted);
+  }
+
+  /* ===== PREVIEW CHROME ===== */
+  .chrome{
+    position: fixed; top: 20px; right: 20px; z-index: 1000;
+    background: rgba(20,18,15,.92); color: #fff; padding: 20px 24px;
+    border-radius: 12px; font-family:'Jost', sans-serif; font-size: 13px; line-height:1.5;
+    backdrop-filter: blur(10px); max-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .chrome h3{ font-size:12px; margin-bottom:12px; color: var(--gold); letter-spacing:.12em; text-transform:uppercase; font-weight:400;}
+  .chrome .row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .chrome button{
+    background: #2a251f; color: var(--ivory); border:1px solid #3d362e;
+    padding: 6px 10px; border-radius:4px; font-size:12px; cursor:pointer;
+    font-family:'Jost', sans-serif; font-weight:300;
+  }
+  .chrome button.active{ background: var(--terracotta); border-color: var(--terracotta); color: var(--ivory);}
+  .chrome button:hover{ border-color: var(--gold);}
+  .chrome label{ display:block; font-size:10px; color: #aaa; margin:6px 0 4px; letter-spacing:.15em; text-transform:uppercase; font-weight:300;}
+  .chrome code{ background:#111; padding:2px 6px; border-radius:3px; font-size:11px; color: var(--gold-light);}
+  body.screenshot .chrome{ display:none; }
+
+  @media print{
+    body{ background:#fff; padding:0;}
+    .chrome{ display:none !important;}
+    .canvas{ transform:none !important;}
+  }
+</style>
+</head>
+<body class="preview">
+
+<!-- ======== PREVIEW CHROME ======== -->
+<div class="chrome" id="chrome">
+  <h3>Cozella® Template</h3>
+  <div style="font-size:11px; color:#aaa; margin-bottom:10px; font-weight:300;">
+    2000×2000 · 8 editorial layouts
+  </div>
+  <label>Layout</label>
+  <div class="row" id="layoutBtns"></div>
+  <label>Preview size</label>
+  <div class="row">
+    <button data-scale="0.30">30%</button>
+    <button data-scale="0.42" class="active">42%</button>
+    <button data-scale="0.60">60%</button>
+    <button data-scale="1">100%</button>
+  </div>
+  <div style="font-size:10px; color:#888; margin-top:10px; line-height:1.6; font-weight:300;">
+    Puppeteer: <code>window.COZ_DATA</code> or <code>?layout=l3&amp;…</code><br>
+    Hide chrome: <code>window.hideChrome()</code>
+  </div>
+</div>
+
+<!-- ======== CANVAS ======== -->
+<div class="canvas" id="canvas" data-layout="l1">
+  <div id="slot"></div>
+  <div class="grain"></div>
+</div>
+
+<!-- ======== DATA ======== -->
+<script>
+const DEFAULT_DATA = /*EDITMODE-BEGIN*/{
+  "layout": "l1",
+  "eyebrow": "Handgemaakte keramiek",
+  "title_line1": "Signature",
+  "title_accent": "Vaas",
+  "title_line3": "28 cm",
+  "tagline": "Handgedraaide keramiek, afgewerkt met plantaardig glazuur.",
+  "product_image": null,
+  "product_image_label": "Productfoto",
+  "materiaal": "Keramiek",
+  "afmeting": "Ø 28 cm",
+  "kleur": "Terracotta",
+
+  "section2_title_line1": "Hoe is",
+  "section2_title_accent": "het gemaakt?",
+  "section2_subtitle_line1": "Productieproces",
+  "section2_subtitle_line2": "in drie stappen",
+  "feature_1_title": "Handgedraaid",
+  "feature_1_description": "Op het pottenbakkerswiel gevormd uit natuurlijke klei.",
+  "feature_2_title": "Gebakken op 1220°C",
+  "feature_2_description": "Twee keer gebakken voor een dichte, sterke structuur.",
+  "feature_3_title": "Plantaardig glazuur",
+  "feature_3_description": "Afgewerkt met voedselveilig glazuur op plantaardige basis.",
+
+  "usp_label": "Productspecificaties",
+  "detail_title_line1": "Wat zijn",
+  "detail_title_line2": "de maten?",
+  "detail_beschrijving": "Alle afmetingen van de Signature Vaas op een rij.",
+  "spec_1_title": "Hoogte",
+  "spec_1_body": "28 cm",
+  "spec_2_title": "Diameter",
+  "spec_2_body": "18 cm (opening 9 cm)",
+  "spec_3_title": "Gewicht",
+  "spec_3_body": "1,4 kg",
+  "spec_4_title": "Inhoud",
+  "spec_4_body": "2,2 liter",
+
+  "s4_eyebrow": "Gebruiksinstructies",
+  "compare_title_line1": "Wel",
+  "compare_title_accent": "en niet doen",
+  "without_1": "Niet in de vaatwasser",
+  "without_2": "Niet in de magnetron",
+  "without_3": "Niet buiten bij vorst",
+  "without_4": "Geen schuurmiddel gebruiken",
+  "with_1": "Handmatig afwassen",
+  "with_2": "Binnen gebruiken",
+  "with_3": "Boven 5°C bewaren",
+  "with_4": "Zachte doek en water",
+
+  "quote_text": "Elk stuk ontstaat op het wiel en is daarom uniek van vorm.",
+  "quote_attribution": "Over het handgemaakte proces",
+
+  "s6_eyebrow": "In de verpakking",
+  "cta_title_line1": "Wat zit",
+  "cta_title_accent": "erin?",
+  "pack_item_1": "1× Signature Vaas (28 cm)",
+  "pack_item_2": "Beschermende vulmaterialen",
+  "pack_item_3": "Verzorgingsinstructies",
+
+  "l7_eyebrow": "Materialen",
+  "l7_title_line1": "Waarvan",
+  "l7_title_accent": "is het gemaakt?",
+  "l7_intro": "De vaas bestaat uit drie natuurlijke componenten, zonder kunststoffen.",
+  "l7_bullets": ["Klei uit Portugal", "Plantaardig glazuur", "Voedselveilig"],
+  "l7_badge": "Materialen",
+
+  "l8_title_line1": "Veelgestelde",
+  "l8_title_accent": "vragen",
+  "faq_1_q": "Is elke vaas identiek?",
+  "faq_1_a": "Nee. Elk stuk wordt handmatig gedraaid, kleine verschillen in vorm en kleur horen bij het product.",
+  "faq_2_q": "Is de vaas waterdicht?",
+  "faq_2_a": "Ja. De binnenkant is geglazuurd en geschikt voor bloemen met water.",
+  "faq_3_q": "Hoe reinig ik de vaas?",
+  "faq_3_a": "Met lauw water en een zachte doek. Niet in de vaatwasser.",
+  "faq_4_q": "Past er een groot boeket in?",
+  "faq_4_a": "De opening is 9 cm; geschikt voor middelgrote boeketten tot ca. 15 stelen."
+}/*EDITMODE-END*/;
+
+function readURLParams(){
+  const p = new URLSearchParams(location.search);
+  const o = {};
+  for (const [k,v] of p.entries()){
+    if (k === 'l7_bullets') o[k] = v.split('|');
+    else o[k] = v;
+  }
+  return o;
+}
+const DATA = Object.assign({}, DEFAULT_DATA, readURLParams(), window.COZ_DATA || {});
+window.COZ_DATA_RESOLVED = DATA;
+</script>
+
+<!-- ======== RENDERERS ======== -->
+<script>
+const photoHTML = (src, label, extraCls='') => {
+  const inner = src
+    ? `<img src="${src}" alt="" />`
+    : `<span class="img-label">{ ${label || 'Productfoto'} }</span>`;
+  return `<div class="img-frame ${extraCls}">${inner}</div>`;
+};
+
+const LAYOUTS = {
+  /* L1 — HERO */
+  l1: (d) => `
+    <div class="l1">
+      <div class="bg-split"></div>
+      <div class="accent-line"></div>
+      <div class="brand-mark">Cozella®</div>
+      <div class="slide-label">01 / 08</div>
+      <div class="headline-block">
+        <div class="eyebrow">${d.eyebrow}</div>
+        <h1>${d.title_line1}<br><em>${d.title_accent}</em><br>${d.title_line3}</h1>
+        <p class="tagline">${d.tagline}</p>
+      </div>
+      <div class="product-placeholder">${photoHTML(d.product_image, d.product_image_label)}</div>
+      <div class="bottom-bar">
+        <div class="stat"><span class="num">${d.materiaal}</span><span class="desc">Materiaal</span></div>
+        <div class="divider"></div>
+        <div class="stat"><span class="num">${d.afmeting}</span><span class="desc">Formaat</span></div>
+        <div class="divider"></div>
+        <div class="stat"><span class="num">${d.kleur}</span><span class="desc">Kleur</span></div>
+      </div>
+    </div>`,
+
+  /* L2 — FEATURES */
+  l2: (d) => `
+    <div class="l2">
+      <div class="slide-label">02 / 08</div>
+      <div class="top-rule"></div>
+      <div class="section-header">
+        <h2>${d.section2_title_line1}<br><em>${d.section2_title_accent}</em></h2>
+        <div class="subtitle">${d.section2_subtitle_line1}<br>${d.section2_subtitle_line2}</div>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feat-num">01</span>
+          <div class="feat-icon"></div>
+          <h3 class="feat-title">${d.feature_1_title}</h3>
+          <p class="feat-body">${d.feature_1_description}</p>
+          <div class="bottom-accent"></div>
+        </div>
+        <div class="feature-card">
+          <span class="feat-num">02</span>
+          <div class="feat-icon"></div>
+          <h3 class="feat-title">${d.feature_2_title}</h3>
+          <p class="feat-body">${d.feature_2_description}</p>
+          <div class="bottom-accent"></div>
+        </div>
+        <div class="feature-card">
+          <span class="feat-num">03</span>
+          <div class="feat-icon"></div>
+          <h3 class="feat-title">${d.feature_3_title}</h3>
+          <p class="feat-body">${d.feature_3_description}</p>
+          <div class="bottom-accent"></div>
+        </div>
+      </div>
+    </div>`,
+
+  /* L3 — SPECS */
+  l3: (d) => `
+    <div class="l3">
+      <div class="slide-label">03 / 08</div>
+      <div class="left-panel">
+        <div class="bg-texture"></div>
+        <div class="vertical-text">Cozella® — Handcrafted Ceramics</div>
+        <div class="highlight-pill"><span>${d.usp_label}</span></div>
+        <h3>${d.detail_title_line1}<br>${d.detail_title_line2}</h3>
+        <p>${d.detail_beschrijving}</p>
+      </div>
+      <div class="right-panel">
+        <div class="spec-item"><span class="spec-num">01</span><div class="spec-content"><h4>${d.spec_1_title}</h4><p>${d.spec_1_body}</p></div></div>
+        <div class="spec-item"><span class="spec-num">02</span><div class="spec-content"><h4>${d.spec_2_title}</h4><p>${d.spec_2_body}</p></div></div>
+        <div class="spec-item"><span class="spec-num">03</span><div class="spec-content"><h4>${d.spec_3_title}</h4><p>${d.spec_3_body}</p></div></div>
+        <div class="spec-item"><span class="spec-num">04</span><div class="spec-content"><h4>${d.spec_4_title}</h4><p>${d.spec_4_body}</p></div></div>
+      </div>
+    </div>`,
+
+  /* L4 — COMPARISON */
+  l4: (d) => `
+    <div class="l4">
+      <div class="slide-label">04 / 08</div>
+      <p class="s4-eyebrow">${d.s4_eyebrow}</p>
+      <h2>${d.compare_title_line1}<br><em>${d.compare_title_accent}</em></h2>
+      <div class="rule"></div>
+      <div class="comparison-grid">
+        <div class="col without">
+          <p class="col-label">Niet doen</p>
+          <div class="col-item"><span class="icon">✕</span><span>${d.without_1}</span></div>
+          <div class="col-item"><span class="icon">✕</span><span>${d.without_2}</span></div>
+          <div class="col-item"><span class="icon">✕</span><span>${d.without_3}</span></div>
+          <div class="col-item"><span class="icon">✕</span><span>${d.without_4}</span></div>
+        </div>
+        <div class="center-divider">
+          <div class="vert-line"></div>
+          <div class="vs-circle">&amp;</div>
+          <div class="vert-line"></div>
+        </div>
+        <div class="col with">
+          <p class="col-label">Wel doen</p>
+          <div class="col-item"><span class="icon">✓</span><span>${d.with_1}</span></div>
+          <div class="col-item"><span class="icon">✓</span><span>${d.with_2}</span></div>
+          <div class="col-item"><span class="icon">✓</span><span>${d.with_3}</span></div>
+          <div class="col-item"><span class="icon">✓</span><span>${d.with_4}</span></div>
+        </div>
+      </div>
+    </div>`,
+
+  /* L5 — QUOTE */
+  l5: (d) => `
+    <div class="l5">
+      <div class="slide-label" style="color: rgba(250,246,239,0.4);">05 / 08</div>
+      <div class="bg-pattern"></div>
+      <div class="big-quote">"</div>
+      <p class="quote-text">${d.quote_text}</p>
+      <div class="rule"></div>
+      <p class="quote-attr">${d.quote_attribution}</p>
+      <div class="corner-brand">Cozella®</div>
+    </div>`,
+
+  /* L6 — PACKAGING / WAT ZIT IN DE DOOS */
+  l6: (d) => `
+    <div class="l6">
+      <div class="bg-glow"></div>
+      <div class="slide-label">06 / 08</div>
+      <div class="top-ornament">
+        <div class="line"></div>
+        <div class="diamond"></div>
+        <div class="line right"></div>
+      </div>
+      <p class="eyebrow">${d.s6_eyebrow}</p>
+      <h2>${d.cta_title_line1}<br><em>${d.cta_title_accent}</em></h2>
+      <div class="pack-list">
+        <div class="pack-row"><span class="pack-num">01</span><span class="pack-text">${d.pack_item_1}</span></div>
+        <div class="pack-row"><span class="pack-num">02</span><span class="pack-text">${d.pack_item_2}</span></div>
+        <div class="pack-row"><span class="pack-num">03</span><span class="pack-text">${d.pack_item_3}</span></div>
+      </div>
+      <div class="bottom-strip"></div>
+      <p class="brand-footer">Cozella® — Handmade Ceramics</p>
+    </div>`,
+
+  /* L7 — EDITORIAL PRODUCT */
+  l7: (d) => `
+    <div class="l7">
+      <div class="slide-label">07 / 08</div>
+      <div class="photo-col">
+        <div class="corner-badge">${d.l7_badge}</div>
+        ${photoHTML(d.product_image, d.product_image_label)}
+      </div>
+      <div class="copy-col">
+        <div class="eyebrow">${d.l7_eyebrow}</div>
+        <h1>${d.l7_title_line1}<br><em>${d.l7_title_accent}</em></h1>
+        <div class="thin-rule"></div>
+        <p class="intro">${d.l7_intro}</p>
+        <div class="bullets">
+          ${(d.l7_bullets || []).map((b,i) => `
+            <div class="row"><span class="mark">0${i+1}</span>${b}</div>`).join('')}
+        </div>
+      </div>
+    </div>`,
+
+  /* L8 — FAQ */
+  l8: (d) => {
+    return `
+    <div class="l8">
+      <div class="slide-label">08 / 08</div>
+      <div class="hd">
+        <h2>${d.l8_title_line1}<br><em>${d.l8_title_accent}</em></h2>
+      </div>
+      <div class="rule"></div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q"><span class="q-mark">Q.</span>${d.faq_1_q}</div>
+          <div class="faq-a">${d.faq_1_a}</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q"><span class="q-mark">Q.</span>${d.faq_2_q}</div>
+          <div class="faq-a">${d.faq_2_a}</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q"><span class="q-mark">Q.</span>${d.faq_3_q}</div>
+          <div class="faq-a">${d.faq_3_a}</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q"><span class="q-mark">Q.</span>${d.faq_4_q}</div>
+          <div class="faq-a">${d.faq_4_a}</div>
+        </div>
+      </div>
+      <div class="ft">
+        <div class="brand">Cozella®</div>
+      </div>
+    </div>`;
+  }
+};
+
+function render(){
+  const layout = DATA.layout || 'l1';
+  const slot = document.getElementById('slot');
+  const canvas = document.getElementById('canvas');
+  canvas.setAttribute('data-layout', layout);
+  slot.innerHTML = (LAYOUTS[layout] || LAYOUTS.l1)(DATA);
+  document.querySelectorAll('#layoutBtns button').forEach(b => {
+    b.classList.toggle('active', b.dataset.layout === layout);
+  });
+  window.__cozella_ready = true;
+  document.body.setAttribute('data-ready', '1');
+}
+
+(function buildChrome(){
+  const names = ['Hero','Proces','Maten','Gebruik','Detail','Verpakking','Materialen','FAQ'];
+  const btns = document.getElementById('layoutBtns');
+  names.forEach((n,i) => {
+    const b = document.createElement('button');
+    b.dataset.layout = 'l'+(i+1); b.textContent = `${i+1} · ${n}`;
+    b.onclick = () => { DATA.layout = 'l'+(i+1); render(); };
+    btns.appendChild(b);
+  });
+  document.querySelectorAll('[data-scale]').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('[data-scale]').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const s = parseFloat(b.dataset.scale);
+      document.documentElement.style.setProperty('--preview-scale', s);
+      if (s >= 1) document.body.classList.remove('preview'); else document.body.classList.add('preview');
+    };
+  });
+})();
+
+window.setCozellaData = function(data){ Object.assign(DATA, data); render(); return DATA; };
+window.hideChrome = function(){ document.body.classList.add('screenshot'); };
+
+window.addEventListener('message', (e) => {
+  if (!e.data || typeof e.data !== 'object') return;
+  if (e.data.type === '__activate_edit_mode') document.getElementById('chrome').style.display = 'block';
+  if (e.data.type === '__deactivate_edit_mode') document.getElementById('chrome').style.display = 'none';
+});
+window.parent.postMessage({type:'__edit_mode_available'}, '*');
+
+render();
+</script>
+</body>
+</html>
