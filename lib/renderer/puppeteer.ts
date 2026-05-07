@@ -55,21 +55,3 @@ export async function renderTemplateElement(
     await browser.close();
   }
 }
-
-export async function renderCozella3Slot(htmlString: string): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  try {
-    const page = await browser.newPage();
-    await page.setViewport({ width: 2100, height: 2100, deviceScaleFactor: 1 });
-    await page.setContent(htmlString, { waitUntil: "networkidle0" });
-    const el = await page.$("#canvas");
-    if (!el) throw new Error("Cozella3 #canvas element not found in HTML");
-    const screenshot = await el.screenshot({ type: "png" });
-    return Buffer.from(screenshot);
-  } finally {
-    await browser.close();
-  }
-}

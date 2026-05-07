@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CopyResult, CozellaCopyResult, CozellaV2CopyResult, CozellaV3Data, InsightsResult, Language, SessionData, SlotCopy } from "@/types";
+import { CopyResult, CozellaCopyResult, InsightsResult, Language, SessionData, SlotCopy } from "@/types";
 import { StyleConfig } from "@/types/style";
 
 // Safely extract an error message from any fetch response (JSON or plain text)
@@ -42,25 +42,6 @@ const RAMBUX_SLOT_LABELS = [
   "Slide 05 — Varianten",
 ];
 
-const COZELLA2_SLOT_LABELS = [
-  "Slide 00 — Hero",
-  "Slide 01 — Features",
-  "Slide 02 — Detail & Specs",
-  "Slide 03 — Vergelijking",
-  "Slide 04 — Quote",
-  "Slide 05 — Closing",
-];
-
-const COZELLA3_SLOT_LABELS = [
-  "Slide 01 — Hero",
-  "Slide 02 — Proces / Features",
-  "Slide 03 — Maten / Specs",
-  "Slide 04 — Gebruik / Vergelijking",
-  "Slide 05 — Detail / Quote",
-  "Slide 06 — Verpakking",
-  "Slide 07 — Materialen / Editorial",
-  "Slide 08 — FAQ",
-];
 
 type ActivePanel = "none" | "tweak" | "style";
 
@@ -104,13 +85,6 @@ function styleToChips(s: StyleConfig): string[] {
 }
 
 function getSlotCopy(session: SessionData, index: number): SlotCopy {
-  if (session.templateMode === "cozella3" && session.cozellaV3Data) {
-    return session.cozellaV3Data as unknown as SlotCopy;
-  }
-  if (session.templateMode === "cozella2" && session.cozellaV2Copy) {
-    const key = `slot0${index}` as keyof CozellaV2CopyResult;
-    return session.cozellaV2Copy[key] as unknown as SlotCopy;
-  }
   if ((session.templateMode === "cozella" || session.templateMode === "rambux") && session.cozellaCopy) {
     const key = `slot0${index}` as keyof CozellaCopyResult;
     return session.cozellaCopy[key] as unknown as SlotCopy;
@@ -120,12 +94,11 @@ function getSlotCopy(session: SessionData, index: number): SlotCopy {
 }
 
 function usesOverlay(mode: string | undefined): boolean {
-  return mode === "cozella" || mode === "rambux" || mode === "cozella2";
+  return mode === "cozella" || mode === "rambux";
 }
 
 function slotCountForMode(mode: string | undefined): number {
-  if (mode === "cozella3") return 8;
-  if (mode === "cozella" || mode === "rambux" || mode === "cozella2") return 6;
+  if (mode === "cozella" || mode === "rambux") return 6;
   return 5;
 }
 
@@ -411,21 +384,7 @@ export default function ResultsPage() {
       }
       const { copy: newCopy } = await res.json();
 
-      if (session?.templateMode === "cozella3") {
-        const v3Data = newCopy as CozellaV3Data;
-        setSlots((prev) =>
-          prev.map((s) => ({ ...s, copy: v3Data as unknown as SlotCopy, previewUrl: null }))
-        );
-      } else if (session?.templateMode === "cozella2") {
-        const v2Copy = newCopy as CozellaV2CopyResult;
-        setSlots((prev) =>
-          prev.map((s, i) => ({
-            ...s,
-            copy: (v2Copy[`slot0${i}` as keyof CozellaV2CopyResult] as unknown as SlotCopy),
-            previewUrl: null,
-          }))
-        );
-      } else if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
+      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
         const cozellaCopy = newCopy as CozellaCopyResult;
         setSlots((prev) =>
           prev.map((s, i) => ({
@@ -470,21 +429,7 @@ export default function ResultsPage() {
       setCurrentLanguage(lang);
       setSession((prev) => prev ? { ...prev, language: lang } : prev);
 
-      if (session?.templateMode === "cozella3") {
-        const v3Data = newCopy as CozellaV3Data;
-        setSlots((prev) =>
-          prev.map((s) => ({ ...s, copy: v3Data as unknown as SlotCopy, previewUrl: null }))
-        );
-      } else if (session?.templateMode === "cozella2") {
-        const v2Copy = newCopy as CozellaV2CopyResult;
-        setSlots((prev) =>
-          prev.map((s, i) => ({
-            ...s,
-            copy: (v2Copy[`slot0${i}` as keyof CozellaV2CopyResult] as unknown as SlotCopy),
-            previewUrl: null,
-          }))
-        );
-      } else if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
+      if (session?.templateMode === "cozella" || session?.templateMode === "rambux") {
         const cozellaCopy = newCopy as CozellaCopyResult;
         setSlots((prev) =>
           prev.map((s, i) => ({
@@ -631,9 +576,7 @@ export default function ResultsPage() {
 
   const isCozella = session.templateMode === "cozella";
   const isRambux = session.templateMode === "rambux";
-  const isCozella2 = session.templateMode === "cozella2";
-  const isCozella3 = session.templateMode === "cozella3";
-  const slotLabels = isCozella3 ? COZELLA3_SLOT_LABELS : isCozella ? COZELLA_SLOT_LABELS : isRambux ? RAMBUX_SLOT_LABELS : isCozella2 ? COZELLA2_SLOT_LABELS : AMAZON_SLOT_LABELS;
+  const slotLabels = isCozella ? COZELLA_SLOT_LABELS : isRambux ? RAMBUX_SLOT_LABELS : AMAZON_SLOT_LABELS;
 
   return (
     <main style={{ background: "#0f0f0f", minHeight: "100vh", color: "white" }}
@@ -651,7 +594,7 @@ export default function ResultsPage() {
         <div className="flex items-center gap-2 mb-6">
           <p className="text-gray-500 text-sm">{session.category}</p>
           <span className="text-xs text-gray-600 border border-[#333] rounded px-1.5 py-0.5">
-            {isCozella3 ? "Cozella 3" : isCozella ? "Cozella" : isRambux ? "RAMBUX®" : isCozella2 ? "Cozella 2" : "Amazon"}
+            {isCozella ? "Cozella" : isRambux ? "RAMBUX®" : "Amazon"}
           </span>
         </div>
 
@@ -759,14 +702,14 @@ export default function ResultsPage() {
           <div>
             <h1 className="text-2xl font-bold">Jouw infographics</h1>
             <p className="text-gray-500 text-sm mt-1">
-              {(isCozella || isRambux || isCozella2 || isCozella3)
+              {(isCozella || isRambux)
                 ? "Pas tekst aan of regenereer per slide"
                 : "Pas tekst aan, upload een stijlreferentie of regenereer per slide"}
             </p>
           </div>
 
           {/* Overlay opacity slider — Cozella + Cozella2 + RAMBUX */}
-          {(isCozella || isRambux || isCozella2) && !isCozella3 && (
+          {(isCozella || isRambux) && (
             <div className="flex items-center gap-3 bg-[#141414] border border-[#222] rounded-xl px-4 py-3">
               <span className="text-xs text-gray-400 whitespace-nowrap">Foto helderheid</span>
               <span className="text-xs text-gray-600">Lichter</span>
@@ -786,7 +729,7 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {!isCozella && !isRambux && !isCozella2 && !isCozella3 && (
+          {!isCozella && !isRambux && (
             <div>
               <input ref={globalStyleInputRef} type="file" accept="image/jpeg,image/png"
                 className="hidden"
@@ -832,7 +775,7 @@ export default function ResultsPage() {
               slot={slot}
               session={session}
               label={slotLabels[index]}
-              isCozella={isCozella || isRambux || isCozella2 || isCozella3}
+              isCozella={isCozella || isRambux}
               onTweak={() => handleTweak(index)}
               onTweakInputChange={(v) => patchSlot(index, { tweakInput: v })}
               onStyleFile={(file, all) => handleStyleUpload(index, file, all)}

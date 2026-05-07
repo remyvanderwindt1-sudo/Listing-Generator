@@ -2,8 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import {
   CopyResult,
   CozellaCopyResult,
-  CozellaV2CopyResult,
-  CozellaV3Data,
   InsightsResult,
   Language,
   ProductCategory,
@@ -14,10 +12,6 @@ import {
   GENERATE_COPY_USER,
   GENERATE_COPY_SYSTEM_COZELLA,
   GENERATE_COPY_USER_COZELLA,
-  GENERATE_COPY_SYSTEM_COZELLA2,
-  GENERATE_COPY_USER_COZELLA2,
-  GENERATE_COPY_SYSTEM_COZELLA3,
-  GENERATE_COPY_USER_COZELLA3,
   GENERATE_COPY_SYSTEM_RAMBUX,
   GENERATE_COPY_USER_RAMBUX,
   TRANSLATE_COPY_SYSTEM,
@@ -135,66 +129,6 @@ export async function generateRambuxCopy(
     raw = await callClaude(system, userMsg, temperature);
     try {
       return parseClaudeJSON(raw) as CozellaCopyResult;
-    } catch {
-      throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
-    }
-  }
-}
-
-export async function generateCozellaV2Copy(
-  productName: string,
-  category: ProductCategory,
-  insights: InsightsResult,
-  language: Language = "nl",
-  temperature = 0.7
-): Promise<CozellaV2CopyResult> {
-  const system = GENERATE_COPY_SYSTEM_COZELLA2(language);
-  const userMsg = GENERATE_COPY_USER_COZELLA2(
-    productName,
-    category,
-    insights.drivers,
-    insights.blockers,
-    insights.voiceOfCustomer
-  );
-
-  let raw: string;
-  try {
-    raw = await callClaude(system, userMsg, temperature);
-    return parseClaudeJSON(raw) as CozellaV2CopyResult;
-  } catch {
-    raw = await callClaude(system, userMsg, temperature);
-    try {
-      return parseClaudeJSON(raw) as CozellaV2CopyResult;
-    } catch {
-      throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
-    }
-  }
-}
-
-export async function generateCozella3Copy(
-  productName: string,
-  category: ProductCategory,
-  insights: InsightsResult,
-  language: Language = "nl",
-  temperature = 0.7
-): Promise<CozellaV3Data> {
-  const system = GENERATE_COPY_SYSTEM_COZELLA3(language);
-  const userMsg = GENERATE_COPY_USER_COZELLA3(
-    productName,
-    category,
-    insights.drivers,
-    insights.blockers,
-    insights.voiceOfCustomer
-  );
-
-  let raw: string;
-  try {
-    raw = await callClaude(system, userMsg, temperature);
-    return parseClaudeJSON(raw) as CozellaV3Data;
-  } catch {
-    raw = await callClaude(system, userMsg, temperature);
-    try {
-      return parseClaudeJSON(raw) as CozellaV3Data;
     } catch {
       throw new Error(`Claude returned invalid JSON after retry: ${raw.slice(0, 200)}`);
     }

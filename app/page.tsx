@@ -230,7 +230,7 @@ export default function HomePage() {
                     <p className="text-white font-medium text-sm truncate">{p.productName}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-gray-500 border border-[#333] rounded px-1.5 py-0.5">
-                        {p.templateMode === "rambux" ? "RAMBUX®" : p.templateMode === "cozella" ? "Cozella" : p.templateMode === "cozella2" ? "Cozella 2" : p.templateMode === "cozella3" ? "Cozella 3" : "Amazon"}
+                        {p.templateMode === "rambux" ? "RAMBUX®" : p.templateMode === "cozella" ? "Cozella" : "Amazon"}
                       </span>
                       <span className="text-xs text-gray-500 border border-[#333] rounded px-1.5 py-0.5 uppercase">
                         {p.language}
@@ -304,30 +304,6 @@ export default function HomePage() {
             >
               <div className="text-base font-semibold mb-0.5">Cozella</div>
               <div className="text-xs text-gray-500">6 slides · Premium lifestyle stijl</div>
-            </button>
-            <button
-              onClick={() => setTemplateMode("cozella2")}
-              disabled={isLoading}
-              className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
-                templateMode === "cozella2"
-                  ? "border-[#BFA46A] bg-[#BFA46A]/5"
-                  : "border-[#333] hover:border-[#555]"
-              }`}
-            >
-              <div className="text-base font-semibold mb-0.5">Cozella 2</div>
-              <div className="text-xs text-gray-500">6 slides · Terracotta &amp; goud</div>
-            </button>
-            <button
-              onClick={() => setTemplateMode("cozella3")}
-              disabled={isLoading}
-              className={`col-span-2 p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
-                templateMode === "cozella3"
-                  ? "border-[#BFA46A] bg-[#BFA46A]/5"
-                  : "border-[#333] hover:border-[#555]"
-              }`}
-            >
-              <div className="text-base font-semibold mb-0.5">Cozella 3 — Editorial</div>
-              <div className="text-xs text-gray-500">8 slides · 2000×2000 · JavaScript-template met terracotta &amp; goud</div>
             </button>
           </div>
         </div>

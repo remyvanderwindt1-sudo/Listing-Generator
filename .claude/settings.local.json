@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git push *)",
+      "Bash(node -e 'const d=require\\('\\\\''__TRACKED_VAR__'\\\\''\\); console.log\\(d.productName, '\\\\''|'\\\\'', d.templateMode, '\\\\''|'\\\\'', d.language, '\\\\''|'\\\\'', new Date\\(d.savedAt||d.createdAt\\).toLocaleString\\('\\\\''nl-NL'\\\\''\\)\\)')",
+      "Bash(start http://localhost:3002)",
+      "Bash(node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
